@@ -136,7 +136,7 @@ public class RoadSegment : MonoBehaviour
 
         Vector3 pos = Vector3.Lerp(d, e, t);
         Vector3 tangent = (e - d).normalized;
-
+        
         return new OrientedPoint(pos, tangent);
     }
 
