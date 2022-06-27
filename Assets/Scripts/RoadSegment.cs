@@ -1,9 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
 using System.Linq;
+using UnityEditor;
+using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class RoadSegment : MonoBehaviour
@@ -54,7 +52,7 @@ public class RoadSegment : MonoBehaviour
                 verts.Add(op.LocalToWorldPosition(shape2D.vertices[i].point));
                 normals.Add(op.LocalToWorldVect(shape2D.vertices[i].normal));
                 //uvs.Add(new Vector2(shape2D.vertices[i].u, t * GetApproxLength() / uSpan));
-                uvs.Add(new Vector2(shape2D.vertices[i].u,  FloatArrayExtensions.Sample(fArr, t) / uSpan ));
+                uvs.Add(new Vector2(shape2D.vertices[i].u,  fArr.Sample(t) / uSpan ));
             }
         }
 

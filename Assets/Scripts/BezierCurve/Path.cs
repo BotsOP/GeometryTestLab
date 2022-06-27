@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -41,7 +40,7 @@ public class Path
 
     public Vector3[] GetPointsInSegment(int i)
     {
-        return new Vector3[] { points[i * 3], points[i * 3 + 1], points[i * 3 + 2], points[i * 3 + 3] };
+        return new[] { points[i * 3], points[i * 3 + 1], points[i * 3 + 2], points[i * 3 + 3] };
     }
 
     public void MovePoint(int i, Vector3 pos)

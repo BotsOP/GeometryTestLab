@@ -1,7 +1,4 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,21 +8,109 @@ public class VineSegment : MonoBehaviour
     [Range(4, 32)]
     [SerializeField] private int roundSegments = 16;
 
+    [Range(2, 64)] 
+    [SerializeField] private int curveSegments = 16;
+
+    [Range(0, 1)] [SerializeField] private float vineDiameter = 1f;
+
+    [Range(0, 1)]
+    [SerializeField] private float tTest;
+
     [HideInInspector] public Path path;
     [SerializeField] private List<Transform> transformPoints;
 
     [SerializeField] private GameObject emptyObject;
+    private Mesh mesh;
+
+    private void Awake()
+    {
+        path = new Path(transform.position);
+        path.AddSegment(Vector3.right * 10);
+        mesh = new Mesh();
+        GetComponent<MeshFilter>().sharedMesh = mesh;
+    }
+
+    private void GenerateMesh()
+    {
+        List<Vector3> verts = new List<Vector3>();
+        List<Vector3> normals = new List<Vector3>();
+        List<Vector2> uvs = new List<Vector2>();
+        List<int> triIndices = new List<int>();
+        for (int i = 0; i < path.NumSegments; i++)
+        {
+            
+            float[] fArr = new float[32];
+            CalcLengthTableInto(fArr, i);
+            
+            for (int segment = 0; segment < curveSegments; segment++)
+            {
+                float t = segment / (curveSegments - 1f);
+                OrientedPoint op = GetBezierPoint(t, i); 
+                
+                for (int vertex = 0; vertex < roundSegments; vertex++)
+                {
+                    float u = (float)vertex / roundSegments;
+                    float amountDegrees = 360 / roundSegments * vertex;
+                    Vector3 dir = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right * vineDiameter);
+                    Vector3 newPos = dir + op.pos;
+                    verts.Add(newPos);
+                    normals.Add(dir);
+                    uvs.Add(new Vector2(u,  fArr.Sample(t)));
+                }
+            }
+            
+            for (int segment = 0; segment < curveSegments - 1; segment++)
+            {
+                int rootIndex = roundSegments * (segment + curveSegments * i);
+                int rootIndexNext = (roundSegments) * (1 + segment + curveSegments * i);
+                
+                for (int j = 0; j < roundSegments; j++)
+                {
+                    int currentA = rootIndex + j;
+                    int currentB = (rootIndex + (j + 1) % roundSegments);
+                    int nextA = rootIndexNext + j;
+                    int nextB = (rootIndexNext + (j + 1) % roundSegments);
+                    
+                    triIndices.Add(nextA);
+                    triIndices.Add(currentA);
+                    triIndices.Add(currentB);
+                    
+                    triIndices.Add(nextB);
+                    triIndices.Add(nextA);
+                    triIndices.Add(currentB);
+                }
+            }
+        }
+        
+        mesh.SetVertices(verts);
+        mesh.SetTriangles(triIndices, 0);
+        mesh.SetNormals(normals);
+        mesh.SetUVs(0, uvs);
+    }
+
+    private void Update() => GenerateMesh();
+    
+    private void CalcLengthTableInto(float[] arr, int segment)
+    {
+        arr[0] = 0f;
+        float totalLength = 0f;
+        Vector3 prev = path.GetPointsInSegment(segment)[0];
+
+        for (int i = 0; i < arr.Length; i++)
+        {
+            float t = ((float)i) / (arr.Length - 1);
+            Vector3 pt = GetBezierPoint(t, segment).pos;
+            float diff = (prev - pt).magnitude;
+            totalLength += diff;
+            arr[i] = totalLength;
+            prev = pt;
+        }
+    }
+
     private void OnDrawGizmos()
     {
         path = new Path(transform.position);
-        
-        // Vector3 pos = Vector3.up;
-        // for (int i = 0; i < roundSegments; i++)
-        // {
-        //     float amountDegrees = 360 / roundSegments * i;
-        //     Vector3 newPos = Quaternion.Euler(amountDegrees, 0, 0) * pos;
-        //     Gizmos.DrawSphere(newPos, 0.05f);
-        // }
+        path.AddSegment(Vector3.right * 10);
         
         int transformPointCount = transformPoints.Count;
         
@@ -82,6 +167,74 @@ public class VineSegment : MonoBehaviour
             Gizmos.DrawSphere(path[i], 0.05f);
             Gizmos.color = Color.white;
         }
+
+        Gizmos.color = Color.blue;
+
+        // OrientedPoint op = GetBezierPoint(tTest, 0);
+        //
+        // Gizmos.DrawSphere(op.pos, 0.05f);
+        //
+        // for (int vertex = 0; vertex < roundSegments; vertex++)
+        // {
+        //     float amountDegrees = 360 / roundSegments * vertex;
+        //     Vector3 newPos = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right) + op.pos;
+        //     Gizmos.DrawSphere(newPos, 0.05f);
+        // }
+        
+        // List<Vector3> verts = new List<Vector3>();
+        // for (int segment = 0; segment < curveSegments; segment++)
+        // {
+        //     float t = segment / (curveSegments - 1f);
+        //     OrientedPoint op = GetBezierPoint(t, 0); 
+        //         
+        //     for (int vertex = 0; vertex < roundSegments; vertex++)
+        //     {
+        //         float amountDegrees = 360 / roundSegments * vertex;
+        //         Vector3 newPos = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right) + op.pos;
+        //         verts.Add(newPos);
+        //
+        //         Gizmos.DrawSphere(newPos, 0.05f);
+        //         
+        //         Gizmos.color = Color.blue;
+        //     }
+        // }
+        //
+        // Gizmos.DrawSphere(verts[3], 0.09f);
+        //
+        // for (int segment = 0; segment < curveSegments - 1; segment++)
+        // {
+        //     int rootIndex = roundSegments * segment;
+        //     int rootIndexNext = (roundSegments) * (segment + 1);
+        //     
+        //     //Debug.Log(rootIndex + "   " + rootIndexNext);
+        //         
+        //     for (int j = 0; j < roundSegments; j++)
+        //     {
+        //         int currentA = rootIndex + j;
+        //         int currentB = (rootIndex + (j + 1) % roundSegments);
+        //         int nextA = rootIndexNext + j;
+        //         int nextB = (rootIndexNext + (j + 1) % roundSegments);
+        //         
+        //         Debug.Log(currentB + "    " + currentA + "    " + nextA + "  tri1  " + rootIndexNext);
+        //         Debug.Log(currentB + "    " + nextA + "    " + nextB + "  tri2  ");
+        //         
+        //         Gizmos.color = Color.green;
+        //             
+        //         Gizmos.DrawLine(verts[currentB], verts[currentA]);
+        //         Gizmos.DrawLine(verts[currentA], verts[nextA]);
+        //         Gizmos.DrawLine(verts[nextA], verts[currentB]);
+        //         
+        //         Gizmos.color = Color.yellow;
+        //         
+        //         Gizmos.DrawLine(verts[currentB], verts[nextA]);
+        //         Gizmos.DrawLine(verts[nextA], verts[nextB]);
+        //         Gizmos.DrawLine(verts[nextB], verts[currentB]);
+        //         
+        //         Gizmos.color = Color.white;
+        //     }
+        // }
+        
+        Gizmos.color = Color.white;
         
         Event guiEvent = Event.current;
 
@@ -123,10 +276,5 @@ public class VineSegment : MonoBehaviour
         Vector3 tangent = (e - d).normalized;
 
         return new OrientedPoint(pos, tangent);
-    }
-
-    private void Awake()
-    {
-        
     }
 }

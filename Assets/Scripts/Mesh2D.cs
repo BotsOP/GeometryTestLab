@@ -1,11 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 [CreateAssetMenu]
 public class Mesh2D : ScriptableObject
 {
-    [System.Serializable]
+    [Serializable]
     public class Vertex
     {
         public Vector2 point;
