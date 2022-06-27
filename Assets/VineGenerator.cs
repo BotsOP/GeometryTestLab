@@ -9,9 +9,7 @@ public class VineGenerator : MonoBehaviour
     [SerializeField] private float stepSize;
     private readonly Vector3[] dirs = 
     {
-        Vector3.up,
         Vector3.forward,
-        Vector3.down,
         Vector3.down,
         Vector3.back,
         Vector3.up
@@ -29,35 +27,43 @@ public class VineGenerator : MonoBehaviour
 
     private void GetVineGrowth()
     {
-        List<Vector3> points = new List<Vector3>();
-        Vector3 currentPos = transform.position;
-        points.Add(currentPos);
-        Gizmos.DrawSphere(currentPos, 0.05f);
+        List<OrientedPoint> points = new List<OrientedPoint>();
+        OrientedPoint currentOP = new OrientedPoint(transform.position, transform.rotation);
+        points.Add(currentOP);
+        Gizmos.DrawSphere(currentOP.pos, 0.05f);
         for (int i = 0; i < vinePoints; i++)
         {
-            currentPos = CalculateNextPoint(currentPos, transform.rotation);
-            Gizmos.DrawSphere(currentPos, 0.05f);
+            currentOP = CalculateNextPoint(currentOP);
+            Gizmos.DrawSphere(currentOP.pos, 0.05f);
         }
     }
 
-    private Vector3 CalculateNextPoint(Vector3 origin, Quaternion direction)
+    private OrientedPoint CalculateNextPoint(OrientedPoint origin)
     {
-        Vector3 newPos = Vector3.zero;
-        
+        origin.pos = origin.LocalToWorldPosition(Vector3.up * 0.02f);
+
         for (int i = 0; i < dirs.Length; i++)
         {
+            // Vector3 dir = direction * dirs[i] * stepSize;
+            // dir = origin.rot * dir;
+
+            Vector3 dir = (origin.rot * dirs[i] * stepSize);
+            
             RaycastHit hit;
-            Vector3 dir = direction * dirs[i] * stepSize;
-            if (Physics.Raycast(origin, dir, out hit, stepSize))
+            if (Physics.Raycast(origin.pos, dir, out hit, stepSize))
             {
-                Debug.DrawRay(origin, dir, Color.red);
+                //Debug.DrawRay(origin.pos, dir * 0.1f, Color.red);
                 //Debug.Log("hit something");
-                newPos = hit.point - dir * 0.01f;
+                //Debug.DrawRay(origin.pos, origin.rot * Vector3.up * 0.1f, Color.green);
+                origin.pos = hit.point - dir * 0.01f;
+                
+                origin.rot = Quaternion.LookRotation(Quaternion.AngleAxis(-90, transform.rotation * Vector3.left) * hit.normal, hit.normal);
+                //Debug.DrawRay(origin.pos, Quaternion.AngleAxis(-90, transform.rotation * Vector3.left) * hit.normal * 0.1f, Color.cyan);
                 break;
             }
-            Debug.DrawRay(origin, dir, Color.white);
-            origin += dir;
+            //Debug.DrawRay(origin.pos, dir, Color.white);
+            origin.pos += dir;
         }
-        return newPos;
+        return origin;
     }
 }
