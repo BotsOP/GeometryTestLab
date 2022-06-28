@@ -24,6 +24,11 @@ public class Path
         points.Add(center + Vector3.right);
     }
 
+    public void SetList(List<Vector3> newPoints)
+    {
+        points = newPoints;
+    }
+
     public Vector3 this[int i] => points[i];
 
     public int NumPoints => points.Count;

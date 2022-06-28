@@ -20,22 +20,31 @@ public class VineSegment : MonoBehaviour
     [SerializeField] private List<Transform> transformPoints;
 
     [SerializeField] private GameObject emptyObject;
+    public VineGenerator VineGenerator;
     private Mesh mesh;
 
-    private void Awake()
+    private void Start()
     {
-        path = new Path(transform.position);
-        path.AddSegment(Vector3.right * 10);
         mesh = new Mesh();
         GetComponent<MeshFilter>().sharedMesh = mesh;
     }
 
     private void GenerateMesh()
     {
+        path = new Path(transform.position);
+        List<Vector3> points = new List<Vector3>();
+        for (int i = 0; i < VineGenerator.points.Count; i++)
+        {
+            points.Add(VineGenerator.points[i].pos);
+        }
+        path.SetList(points);
+        VineGenerator.points.Clear();
+        
         List<Vector3> verts = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
         List<int> triIndices = new List<int>();
+        
         for (int i = 0; i < path.NumSegments; i++)
         {
             
@@ -107,155 +116,155 @@ public class VineSegment : MonoBehaviour
         }
     }
 
-    private void OnDrawGizmos()
-    {
-        path = new Path(transform.position);
-        path.AddSegment(Vector3.right * 10);
-        
-        int transformPointCount = transformPoints.Count;
-        
-        if (path.NumPoints > transformPointCount)
-        {
-            Debug.Log("not enough points  " + path.NumPoints + "  " + transformPoints.Count);
-            for (int i = 0; i < path.NumPoints - transformPointCount; i++)
-            {
-                GameObject newObject =
-                    Instantiate(emptyObject, path[transformPointCount + i], Quaternion.identity, transform);
-                
-                var iconContent = EditorGUIUtility.IconContent("Assets/Textures/emptyImage.png");
-                EditorGUIUtility.SetIconForObject(newObject, (Texture2D) iconContent.image);
-                
-                transformPoints.Add(newObject.transform);
-            }
-        }
-        
-        else if (path.NumPoints < transformPoints.Count)
-        {
-            Debug.Log("too many points  " + path.NumPoints + "  " + transformPoints.Count);
-            for (int i = 0; i < transformPoints.Count - path.NumPoints; i++)
-            {
-                DestroyImmediate(transformPoints[transformPoints.Count - path.NumPoints + i]);
-                transformPoints.Remove(transformPoints[transformPoints.Count - path.NumPoints + i]);
-            }
-        }
-
-        for (int i = 0; i < path.NumPoints; i++)
-        {
-            path.MovePoint(i, transformPoints[i].position);
-        }
-
-        for (int i = 0; i < path.NumSegments; i++)
-        {
-            int startIndex = i * 3;
-            Handles.DrawBezier(path[startIndex], 
-                path[startIndex + 3], 
-                path[startIndex + 1], 
-                path[startIndex + 2], Color.white, EditorGUIUtility.whiteTexture, 1f);
-
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(path[startIndex], path[startIndex + 1]);
-            Gizmos.DrawLine(path[startIndex + 2], path[startIndex + 3]);
-            Gizmos.color = Color.white;
-        }
-
-        for (int i = 0; i < path.NumPoints; i++)
-        {
-            if (i % 3 != 0)
-            {
-                Gizmos.color = Color.red;
-            }
-            Gizmos.DrawSphere(path[i], 0.05f);
-            Gizmos.color = Color.white;
-        }
-
-        Gizmos.color = Color.blue;
-
-        // OrientedPoint op = GetBezierPoint(tTest, 0);
-        //
-        // Gizmos.DrawSphere(op.pos, 0.05f);
-        //
-        // for (int vertex = 0; vertex < roundSegments; vertex++)
-        // {
-        //     float amountDegrees = 360 / roundSegments * vertex;
-        //     Vector3 newPos = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right) + op.pos;
-        //     Gizmos.DrawSphere(newPos, 0.05f);
-        // }
-        
-        // List<Vector3> verts = new List<Vector3>();
-        // for (int segment = 0; segment < curveSegments; segment++)
-        // {
-        //     float t = segment / (curveSegments - 1f);
-        //     OrientedPoint op = GetBezierPoint(t, 0); 
-        //         
-        //     for (int vertex = 0; vertex < roundSegments; vertex++)
-        //     {
-        //         float amountDegrees = 360 / roundSegments * vertex;
-        //         Vector3 newPos = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right) + op.pos;
-        //         verts.Add(newPos);
-        //
-        //         Gizmos.DrawSphere(newPos, 0.05f);
-        //         
-        //         Gizmos.color = Color.blue;
-        //     }
-        // }
-        //
-        // Gizmos.DrawSphere(verts[3], 0.09f);
-        //
-        // for (int segment = 0; segment < curveSegments - 1; segment++)
-        // {
-        //     int rootIndex = roundSegments * segment;
-        //     int rootIndexNext = (roundSegments) * (segment + 1);
-        //     
-        //     //Debug.Log(rootIndex + "   " + rootIndexNext);
-        //         
-        //     for (int j = 0; j < roundSegments; j++)
-        //     {
-        //         int currentA = rootIndex + j;
-        //         int currentB = (rootIndex + (j + 1) % roundSegments);
-        //         int nextA = rootIndexNext + j;
-        //         int nextB = (rootIndexNext + (j + 1) % roundSegments);
-        //         
-        //         Debug.Log(currentB + "    " + currentA + "    " + nextA + "  tri1  " + rootIndexNext);
-        //         Debug.Log(currentB + "    " + nextA + "    " + nextB + "  tri2  ");
-        //         
-        //         Gizmos.color = Color.green;
-        //             
-        //         Gizmos.DrawLine(verts[currentB], verts[currentA]);
-        //         Gizmos.DrawLine(verts[currentA], verts[nextA]);
-        //         Gizmos.DrawLine(verts[nextA], verts[currentB]);
-        //         
-        //         Gizmos.color = Color.yellow;
-        //         
-        //         Gizmos.DrawLine(verts[currentB], verts[nextA]);
-        //         Gizmos.DrawLine(verts[nextA], verts[nextB]);
-        //         Gizmos.DrawLine(verts[nextB], verts[currentB]);
-        //         
-        //         Gizmos.color = Color.white;
-        //     }
-        // }
-        
-        Gizmos.color = Color.white;
-        
-        Event guiEvent = Event.current;
-
-        if (guiEvent.button == 2 && guiEvent.isMouse)
-        {
-            while (transform.childCount > 0)
-            {
-                foreach (Transform child in transform) {
-                    DestroyImmediate(child.gameObject);
-                }
-            }
-            transformPoints.Clear();
-            path = new Path(transform.position);
-        }
-        // if (guiEvent.button == 0 && guiEvent.shift)
-        // {
-        //     Vector3 anchorPos = GetBezierPoint(1, path.NumSegments).rot * Vector3.forward + path[path.NumPoints - 1];
-        //     path.AddSegment(anchorPos);
-        // }
-        
-    }
+    // private void OnDrawGizmos()
+    // {
+    //     path = new Path(transform.position);
+    //     path.AddSegment(Vector3.right * 10);
+    //
+    //     int transformPointCount = transformPoints.Count;
+    //     
+    //     if (path.NumPoints > transformPointCount)
+    //     {
+    //         Debug.Log("not enough points  " + path.NumPoints + "  " + transformPoints.Count);
+    //         for (int i = 0; i < path.NumPoints - transformPointCount; i++)
+    //         {
+    //             GameObject newObject =
+    //                 Instantiate(emptyObject, path[transformPointCount + i], Quaternion.identity, transform);
+    //             
+    //             var iconContent = EditorGUIUtility.IconContent("Assets/Textures/emptyImage.png");
+    //             EditorGUIUtility.SetIconForObject(newObject, (Texture2D) iconContent.image);
+    //             
+    //             transformPoints.Add(newObject.transform);
+    //         }
+    //     }
+    //     
+    //     else if (path.NumPoints < transformPoints.Count)
+    //     {
+    //         Debug.Log("too many points  " + path.NumPoints + "  " + transformPoints.Count);
+    //         for (int i = 0; i < transformPoints.Count - path.NumPoints; i++)
+    //         {
+    //             DestroyImmediate(transformPoints[transformPoints.Count - path.NumPoints + i]);
+    //             transformPoints.Remove(transformPoints[transformPoints.Count - path.NumPoints + i]);
+    //         }
+    //     }
+    //
+    //     for (int i = 0; i < path.NumPoints; i++)
+    //     {
+    //         path.MovePoint(i, transformPoints[i].position);
+    //     }
+    //
+    //     for (int i = 0; i < path.NumSegments; i++)
+    //     {
+    //         int startIndex = i * 3;
+    //         Handles.DrawBezier(path[startIndex], 
+    //             path[startIndex + 3], 
+    //             path[startIndex + 1], 
+    //             path[startIndex + 2], Color.white, EditorGUIUtility.whiteTexture, 1f);
+    //
+    //         Gizmos.color = Color.red;
+    //         Gizmos.DrawLine(path[startIndex], path[startIndex + 1]);
+    //         Gizmos.DrawLine(path[startIndex + 2], path[startIndex + 3]);
+    //         Gizmos.color = Color.white;
+    //     }
+    //
+    //     for (int i = 0; i < path.NumPoints; i++)
+    //     {
+    //         if (i % 3 != 0)
+    //         {
+    //             Gizmos.color = Color.red;
+    //         }
+    //         Gizmos.DrawSphere(path[i], 0.05f);
+    //         Gizmos.color = Color.white;
+    //     }
+    //
+    //     Gizmos.color = Color.blue;
+    //
+    //     // OrientedPoint op = GetBezierPoint(tTest, 0);
+    //     //
+    //     // Gizmos.DrawSphere(op.pos, 0.05f);
+    //     //
+    //     // for (int vertex = 0; vertex < roundSegments; vertex++)
+    //     // {
+    //     //     float amountDegrees = 360 / roundSegments * vertex;
+    //     //     Vector3 newPos = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right) + op.pos;
+    //     //     Gizmos.DrawSphere(newPos, 0.05f);
+    //     // }
+    //     
+    //     // List<Vector3> verts = new List<Vector3>();
+    //     // for (int segment = 0; segment < curveSegments; segment++)
+    //     // {
+    //     //     float t = segment / (curveSegments - 1f);
+    //     //     OrientedPoint op = GetBezierPoint(t, 0); 
+    //     //         
+    //     //     for (int vertex = 0; vertex < roundSegments; vertex++)
+    //     //     {
+    //     //         float amountDegrees = 360 / roundSegments * vertex;
+    //     //         Vector3 newPos = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right) + op.pos;
+    //     //         verts.Add(newPos);
+    //     //
+    //     //         Gizmos.DrawSphere(newPos, 0.05f);
+    //     //         
+    //     //         Gizmos.color = Color.blue;
+    //     //     }
+    //     // }
+    //     //
+    //     // Gizmos.DrawSphere(verts[3], 0.09f);
+    //     //
+    //     // for (int segment = 0; segment < curveSegments - 1; segment++)
+    //     // {
+    //     //     int rootIndex = roundSegments * segment;
+    //     //     int rootIndexNext = (roundSegments) * (segment + 1);
+    //     //     
+    //     //     //Debug.Log(rootIndex + "   " + rootIndexNext);
+    //     //         
+    //     //     for (int j = 0; j < roundSegments; j++)
+    //     //     {
+    //     //         int currentA = rootIndex + j;
+    //     //         int currentB = (rootIndex + (j + 1) % roundSegments);
+    //     //         int nextA = rootIndexNext + j;
+    //     //         int nextB = (rootIndexNext + (j + 1) % roundSegments);
+    //     //         
+    //     //         Debug.Log(currentB + "    " + currentA + "    " + nextA + "  tri1  " + rootIndexNext);
+    //     //         Debug.Log(currentB + "    " + nextA + "    " + nextB + "  tri2  ");
+    //     //         
+    //     //         Gizmos.color = Color.green;
+    //     //             
+    //     //         Gizmos.DrawLine(verts[currentB], verts[currentA]);
+    //     //         Gizmos.DrawLine(verts[currentA], verts[nextA]);
+    //     //         Gizmos.DrawLine(verts[nextA], verts[currentB]);
+    //     //         
+    //     //         Gizmos.color = Color.yellow;
+    //     //         
+    //     //         Gizmos.DrawLine(verts[currentB], verts[nextA]);
+    //     //         Gizmos.DrawLine(verts[nextA], verts[nextB]);
+    //     //         Gizmos.DrawLine(verts[nextB], verts[currentB]);
+    //     //         
+    //     //         Gizmos.color = Color.white;
+    //     //     }
+    //     // }
+    //     
+    //     Gizmos.color = Color.white;
+    //     
+    //     Event guiEvent = Event.current;
+    //
+    //     if (guiEvent.button == 2 && guiEvent.isMouse)
+    //     {
+    //         while (transform.childCount > 0)
+    //         {
+    //             foreach (Transform child in transform) {
+    //                 DestroyImmediate(child.gameObject);
+    //             }
+    //         }
+    //         transformPoints.Clear();
+    //         path = new Path(transform.position);
+    //     }
+    //     // if (guiEvent.button == 0 && guiEvent.shift)
+    //     // {
+    //     //     Vector3 anchorPos = GetBezierPoint(1, path.NumSegments).rot * Vector3.forward + path[path.NumPoints - 1];
+    //     //     path.AddSegment(anchorPos);
+    //     // }
+    //     
+    // }
     
     OrientedPoint GetBezierPoint(float t, int segment)
     {
