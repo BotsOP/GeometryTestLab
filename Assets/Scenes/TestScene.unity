@@ -882,14 +882,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 783843875}
-  m_LocalRotation: {x: -0, y: 0.6312052, z: -0, w: -0.7756159}
+  m_LocalRotation: {x: -0, y: -0.0893815, z: -0, w: -0.9959975}
   m_LocalPosition: {x: 0.547, y: -1.129, z: 0.37}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 281.722, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 370.256, z: 0}
 --- !u!1 &902005243
 GameObject:
   m_ObjectHideFlags: 0
@@ -1039,7 +1039,39 @@ MonoBehaviour:
   roundSegments: 16
   curveSegments: 8
   vineDiameter: 0.064
-  tTest: 0.23
+  vineSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.008196002
+      outSlope: -0.008196002
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.34836823
+    - serializedVersion: 3
+      time: 0.91128993
+      value: 0.7335427
+      inSlope: -0.91202044
+      outSlope: -0.91202044
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.12655495
+      outWeight: 0.5469042
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -6.1526937
+      outSlope: -6.1526937
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.06584683
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   transformPoints:
   - {fileID: 902005244}
   - {fileID: 666449497}

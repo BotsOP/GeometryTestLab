@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -13,8 +14,7 @@ public class VineSegment : MonoBehaviour
 
     [Range(0, 1)] [SerializeField] private float vineDiameter = 1f;
 
-    [Range(0, 1)]
-    [SerializeField] private float tTest;
+    [SerializeField] private AnimationCurve vineSizeCurve;
 
     [HideInInspector] public Path path;
     [SerializeField] private List<Transform> transformPoints;
@@ -47,21 +47,29 @@ public class VineSegment : MonoBehaviour
         
         for (int i = 0; i < path.NumSegments; i++)
         {
+            
             float[] fArr = new float[16];
             CalcLengthTableInto(fArr, i);
             
             for (int segment = 0; segment < curveSegments; segment++)
             {
                 float t = segment / (curveSegments - 1f);
-                //Vector3 up = Vector3.Lerp(VineGenerator.points[i * 3].rot * Vector3.up, VineGenerator.points[( + 1) * 3].rot * Vector3.up, t);
-                OrientedPoint op = GetBezierPoint(t, i, VineGenerator.points[i * 3].rot * Vector3.up);
+                
+                float vineSize = (float)i / (path.NumSegments - 1);
+                float vineSizeNext = (float)(i + 1) / (path.NumSegments - 1);
+                vineSize = Mathf.Lerp(vineSize, vineSizeNext, t);
+                vineSize = vineSizeCurve.Evaluate(vineSize);
+                
+                
+                Vector3 up = Vector3.Lerp(VineGenerator.points[i * 3].rot * Vector3.up, VineGenerator.points[(i + 1) * 3].rot * Vector3.up, t);
+                OrientedPoint op = GetBezierPoint(t, i, up);
                 //Debug.DrawRay(op.pos, op.rot * Vector3.up * 0.1f);
                 
                 for (int vertex = 0; vertex < roundSegments + 1; vertex++)
                 {
                     float u = (float)vertex / roundSegments;
                     float amountDegrees = 360 / roundSegments * (vertex % roundSegments);
-                    Vector3 dir = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right * vineDiameter);
+                    Vector3 dir = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right * (vineDiameter * vineSize));
                     Vector3 newPos = dir + op.pos;
                     verts.Add(newPos);
                     normals.Add(dir);
@@ -91,7 +99,6 @@ public class VineSegment : MonoBehaviour
                 }
             }
         }
-        
         
         mesh.SetVertices(verts);
         mesh.SetTriangles(triIndices, 0);
