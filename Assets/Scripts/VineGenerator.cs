@@ -28,6 +28,8 @@ public class VineGenerator : MonoBehaviour
     {
         //Debug.DrawRay(new Vector3(10, 0 , 0), transform.TransformDirection(Vector3.forward));
         //CalculateNextPoint(transform.position, transform.rotation);
+        points.Clear();
+
         Random.seed = randomSeed;
         GetVineGrowth();
     }
@@ -48,6 +50,8 @@ public class VineGenerator : MonoBehaviour
         {
             currentOP = CalculateNextPoint(currentOP);
             points.Add(currentOP);
+            
+            //Debug.DrawRay(currentOP.pos, currentOP.rot * Vector3.up * 0.1f);
             //Gizmos.DrawSphere(currentOP.pos, 0.05f);
         }
 
@@ -58,30 +62,50 @@ public class VineGenerator : MonoBehaviour
         Gizmos.color = Color.blue;
         int totalPoints = points.Count - 1;
         
-        for (int i = 0; i < totalPoints; i++)
+        points.Insert(1, points[0]);
+        
+        for (int i = 0; i < totalPoints - 1; i++)
         {
             Vector3 posA = points[i * 3].pos;
-            Vector3 posB = points[i * 3 + 1].pos;
+            Vector3 posB = points[i * 3 + 2].pos;
+            Vector3 posC = points[i * 3 + 3].pos;
 
-            Vector3 dirToB = posB - posA;
+            Vector3 dirAB = (posB - posA).normalized;
+            Vector3 dirCB = posC - posB;
+            dirAB *= dirCB.magnitude;
+
+            Vector3 posD = posB + dirAB;
+            Vector3 dirDC = posC - posD;
+            Vector3 posE = posD + dirDC * 0.5f;
+            Vector3 dirEB = posB - posE;
+
+            Vector3 handleA = posB + dirEB * (dirAB.magnitude * 0.9f);
+            Vector3 handleB = posB - dirEB * (dirCB.magnitude * 0.9f);
             
-            Vector3 handleA = posA + (lastDir);
-            lastPos = posA + dirToB * 0.9f;
-            lastDir = dirToB * 0.2f;
+            //Gizmos.DrawSphere(handleA, 0.04f);
+            //Gizmos.DrawSphere(handleB, 0.04f);
             
-            points.Insert(i * 3 + 1,   new OrientedPoint(handleA, lastRot));
-            points.Insert(i * 3 + 2, new OrientedPoint(lastPos, points[i].rot));
+            // Debug.DrawRay(posA, dirAB);
+            // Debug.DrawRay(posB, dirCB);
+            // Debug.DrawRay(posB, dirEB * (dirAB.magnitude * 0.5f));
+            // Debug.DrawRay(posB, dirEB * (dirCB.magnitude * 0.5f * -1));
+
+            points.Insert(i * 3 + 2,new OrientedPoint(handleA, lastRot));
+            points.Insert(i * 3 + 4,new OrientedPoint(handleB, lastRot));
             
             // Gizmos.DrawSphere(handleA, 0.04f);
             // Gizmos.DrawSphere(lastPos, 0.04f);
         }
         
+        points.Add(points[^1]);
         
         // Handles.DrawBezier(points[0].pos, points[3].pos, points[1].pos, points[2].pos, Color.white, EditorGUIUtility.whiteTexture, 1f);
         // Handles.DrawBezier(points[3].pos, points[6].pos, points[4].pos, points[5].pos, Color.white, EditorGUIUtility.whiteTexture, 1f);
         // Handles.DrawBezier(points[6].pos, points[9].pos, points[7].pos, points[8].pos, Color.white, EditorGUIUtility.whiteTexture, 1f);
         // Handles.DrawBezier(points[9].pos, points[12].pos, points[10].pos, points[11].pos, Color.white, EditorGUIUtility.whiteTexture, 1f);
+        // Handles.DrawBezier(points[12].pos, points[15].pos, points[13].pos, points[14].pos, Color.white, EditorGUIUtility.whiteTexture, 1f);
         
+        //points.Clear();
         
         // Gizmos.color = Color.green;
         // Gizmos.DrawSphere(points[4].pos, 0.05f);

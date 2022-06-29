@@ -38,7 +38,7 @@ public class VineSegment : MonoBehaviour
             points.Add(VineGenerator.points[i].pos);
         }
         path.SetList(points);
-        VineGenerator.points.Clear();
+        
         
         List<Vector3> verts = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
@@ -47,19 +47,20 @@ public class VineSegment : MonoBehaviour
         
         for (int i = 0; i < path.NumSegments; i++)
         {
-            
-            float[] fArr = new float[32];
+            float[] fArr = new float[16];
             CalcLengthTableInto(fArr, i);
             
             for (int segment = 0; segment < curveSegments; segment++)
             {
                 float t = segment / (curveSegments - 1f);
-                OrientedPoint op = GetBezierPoint(t, i); 
+                //Vector3 up = Vector3.Lerp(VineGenerator.points[i * 3].rot * Vector3.up, VineGenerator.points[( + 1) * 3].rot * Vector3.up, t);
+                OrientedPoint op = GetBezierPoint(t, i, VineGenerator.points[i * 3].rot * Vector3.up);
+                //Debug.DrawRay(op.pos, op.rot * Vector3.up * 0.1f);
                 
-                for (int vertex = 0; vertex < roundSegments; vertex++)
+                for (int vertex = 0; vertex < roundSegments + 1; vertex++)
                 {
                     float u = (float)vertex / roundSegments;
-                    float amountDegrees = 360 / roundSegments * vertex;
+                    float amountDegrees = 360 / roundSegments * (vertex % roundSegments);
                     Vector3 dir = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right * vineDiameter);
                     Vector3 newPos = dir + op.pos;
                     verts.Add(newPos);
@@ -70,15 +71,15 @@ public class VineSegment : MonoBehaviour
             
             for (int segment = 0; segment < curveSegments - 1; segment++)
             {
-                int rootIndex = roundSegments * (segment + curveSegments * i);
-                int rootIndexNext = (roundSegments) * (1 + segment + curveSegments * i);
+                int rootIndex = (roundSegments + 1) * (segment + curveSegments * i);
+                int rootIndexNext = (roundSegments + 1) * (1 + segment + curveSegments * i);
                 
                 for (int j = 0; j < roundSegments; j++)
                 {
                     int currentA = rootIndex + j;
-                    int currentB = (rootIndex + (j + 1) % roundSegments);
+                    int currentB = (rootIndex + (j + 1) % (roundSegments + 1));
                     int nextA = rootIndexNext + j;
-                    int nextB = (rootIndexNext + (j + 1) % roundSegments);
+                    int nextB = (rootIndexNext + (j + 1) % (roundSegments + 1));
                     
                     triIndices.Add(nextA);
                     triIndices.Add(currentA);
@@ -90,6 +91,7 @@ public class VineSegment : MonoBehaviour
                 }
             }
         }
+        
         
         mesh.SetVertices(verts);
         mesh.SetTriangles(triIndices, 0);
@@ -265,6 +267,27 @@ public class VineSegment : MonoBehaviour
     //     // }
     //     
     // }
+    
+    OrientedPoint GetBezierPoint(float t, int segment, Vector3 up)
+    {
+        Vector3[] points = path.GetPointsInSegment(segment);
+        Vector3 p0 = points[0];
+        Vector3 p1 = points[1];
+        Vector3 p2 = points[2];
+        Vector3 p3 = points[3];
+
+        Vector3 a = Vector3.Lerp(p0, p1, t);
+        Vector3 b = Vector3.Lerp(p1, p2, t);
+        Vector3 c = Vector3.Lerp(p2, p3, t);
+
+        Vector3 d = Vector3.Lerp(a, b, t);
+        Vector3 e = Vector3.Lerp(b, c, t);
+
+        Vector3 pos = Vector3.Lerp(d, e, t);
+        Vector3 tangent = (e - d).normalized;
+
+        return new OrientedPoint(pos, tangent, up);
+    }
     
     OrientedPoint GetBezierPoint(float t, int segment)
     {

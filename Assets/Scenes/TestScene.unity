@@ -870,11 +870,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c31fb1a80266a754f82dfd560b173870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vinePoints: 22
-  stepSize: 0.879
-  randomMaxAngle: 90
+  vinePoints: 36
+  stepSize: 0.204
+  randomMaxAngle: 25.6
   randomMinAngle: 0
-  randomSeed: 638
+  randomSeed: 580
 --- !u!4 &783843877
 Transform:
   m_ObjectHideFlags: 0
@@ -882,14 +882,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 783843875}
-  m_LocalRotation: {x: -0, y: -0.55443203, z: -0, w: -0.83222896}
-  m_LocalPosition: {x: 0.547, y: -1.018, z: 0.37}
+  m_LocalRotation: {x: -0, y: 0.6312052, z: -0, w: -0.7756159}
+  m_LocalPosition: {x: 0.547, y: -1.129, z: 0.37}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 427.34302, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 281.722, z: 0}
 --- !u!1 &902005243
 GameObject:
   m_ObjectHideFlags: 0
@@ -1037,8 +1037,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roundSegments: 16
-  curveSegments: 4
-  vineDiameter: 0.221
+  curveSegments: 8
+  vineDiameter: 0.064
   tTest: 0.23
   transformPoints:
   - {fileID: 902005244}
@@ -1623,7 +1623,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d372d0d2853de374b96f8acfe5545a35, type: 2}
+  - {fileID: 2100000, guid: a8e171407ae71f74992b4ebb3809be93, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

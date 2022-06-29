@@ -187,6 +187,12 @@ public struct OrientedPoint
             this.rot = rot;
         }
         
+        public OrientedPoint(Vector3 pos, Vector3 forward, Vector3 up)
+        {
+            this.pos = pos;
+            rot = Quaternion.LookRotation(forward, up);
+        }
+        
         public OrientedPoint(Vector3 pos, Vector3 forward)
         {
             this.pos = pos;
