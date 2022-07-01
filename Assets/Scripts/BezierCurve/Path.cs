@@ -15,15 +15,10 @@ public class Path
             center + Vector3.right
         };
     }
-
-    public void CreateFirstSegment(Vector3 center)
+    public Path()
     {
-        points.Add(center + Vector3.left);
-        points.Add(center + (Vector3.left + Vector3.forward) * 0.5f);
-        points.Add(center + (Vector3.right + Vector3.forward) * 0.5f);
-        points.Add(center + Vector3.right);
+        
     }
-
     public void SetList(List<Vector3> newPoints)
     {
         points = newPoints;

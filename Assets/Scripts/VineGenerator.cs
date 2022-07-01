@@ -14,8 +14,10 @@ public class VineGenerator : MonoBehaviour
     [SerializeField] private float randomMinAngle;
     [Range(0, 1000)]
     [SerializeField] private int randomSeed;
-    public List<OrientedPoint> points = new List<OrientedPoint>();
 
+    [SerializeField] private VineSegment vines;
+    
+    [HideInInspector] public List<OrientedPoint> points = new();
     
     private readonly Vector3[] dirs = 
     {
@@ -26,19 +28,13 @@ public class VineGenerator : MonoBehaviour
     };
     private void Update()
     {
-        //Debug.DrawRay(new Vector3(10, 0 , 0), transform.TransformDirection(Vector3.forward));
-        //CalculateNextPoint(transform.position, transform.rotation);
         points.Clear();
 
         Random.seed = randomSeed;
         GetVineGrowth();
-    }
 
-    // private void OnDrawGizmos()
-    // {
-    //     Random.seed = randomSeed;
-    //     GetVineGrowth();
-    // }
+        vines.points = points;
+    }
 
     private void GetVineGrowth()
     {

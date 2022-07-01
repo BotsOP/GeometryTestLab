@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,43 +14,37 @@ public class VineSegment : MonoBehaviour
     [SerializeField] private int curveSegments = 16;
 
     [Range(0, 1)] [SerializeField] private float vineDiameter = 1f;
+    [Range(0.01f, 0.5f)] [SerializeField] private float leafSize = 1f;
 
     [SerializeField] private AnimationCurve vineSizeCurve;
+    
+    private Path path;
+    [HideInInspector] public List<OrientedPoint> points = new();
 
-    [HideInInspector] public Path path;
-    [SerializeField] private List<Transform> transformPoints;
-
-    [SerializeField] private GameObject emptyObject;
-    public VineGenerator VineGenerator;
     private Mesh mesh;
 
     private void Start()
     {
         mesh = new Mesh();
         GetComponent<MeshFilter>().sharedMesh = mesh;
+        mesh.name = "vines";
     }
 
     private void GenerateMesh()
     {
-        path = new Path(transform.position);
-        List<Vector3> points = new List<Vector3>();
-        for (int i = 0; i < VineGenerator.points.Count; i++)
-        {
-            points.Add(VineGenerator.points[i].pos);
-        }
-        path.SetList(points);
-        
+        path = new Path();
+        path.SetList(points.Select(point => point.pos).ToList());
         
         List<Vector3> verts = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
         List<int> triIndices = new List<int>();
-        
+
         for (int i = 0; i < path.NumSegments; i++)
         {
-            
             float[] fArr = new float[16];
             CalcLengthTableInto(fArr, i);
+            
             
             for (int segment = 0; segment < curveSegments; segment++)
             {
@@ -60,23 +55,46 @@ public class VineSegment : MonoBehaviour
                 vineSize = Mathf.Lerp(vineSize, vineSizeNext, t);
                 vineSize = vineSizeCurve.Evaluate(vineSize);
                 
-                
-                Vector3 up = Vector3.Lerp(VineGenerator.points[i * 3].rot * Vector3.up, VineGenerator.points[(i + 1) * 3].rot * Vector3.up, t);
+                Vector3 up = Vector3.Lerp(points[i * 3].rot * Vector3.up, points[(i + 1) * 3].rot * Vector3.up, t);
                 OrientedPoint op = GetBezierPoint(t, i, up);
-                //Debug.DrawRay(op.pos, op.rot * Vector3.up * 0.1f);
                 
+                //Vine vertex placement
                 for (int vertex = 0; vertex < roundSegments + 1; vertex++)
                 {
                     float u = (float)vertex / roundSegments;
                     float amountDegrees = 360 / roundSegments * (vertex % roundSegments);
                     Vector3 dir = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right * (vineDiameter * vineSize));
                     Vector3 newPos = dir + op.pos;
-                    verts.Add(newPos);
+                    
+                    //Remove transform changes
+                    newPos = removeTransform(newPos);
+                    dir = Quaternion.Inverse(transform.rotation) * dir;
+
+                    verts.Add(newPos + Vector3.one * 0.001f);
                     normals.Add(dir);
                     uvs.Add(new Vector2(u,  fArr.Sample(t)));
                 }
+                
+                // //Leaf vine placement
+                // amountVineVertice = verts.Count - 1;
+                //
+                // verts.Add(op.rot * new Vector3(0, 0, -1) * leafSize);
+                // verts.Add(op.rot * new Vector3(0, 0, 1) * leafSize);
+                // verts.Add(op.rot * new Vector3(1, 0, 1) * leafSize);
+                // verts.Add(op.rot * new Vector3(1, 0, -1) * leafSize);
+                //
+                // uvs.Add(new Vector2(0, 0));
+                // uvs.Add(new Vector2(0, 1));
+                // uvs.Add(new Vector2(1, 1));
+                // uvs.Add(new Vector2(1, 0));
+                //
+                // for (int j = 0; j < 4; j++)
+                // {
+                //     normals.Add(op.rot * Vector3.up);
+                // }
             }
             
+            //Triangle linking
             for (int segment = 0; segment < curveSegments - 1; segment++)
             {
                 int rootIndex = (roundSegments + 1) * (segment + curveSegments * i);
@@ -85,9 +103,9 @@ public class VineSegment : MonoBehaviour
                 for (int j = 0; j < roundSegments; j++)
                 {
                     int currentA = rootIndex + j;
-                    int currentB = (rootIndex + (j + 1) % (roundSegments + 1));
+                    int currentB = rootIndex + (j + 1) % (roundSegments + 1);
                     int nextA = rootIndexNext + j;
-                    int nextB = (rootIndexNext + (j + 1) % (roundSegments + 1));
+                    int nextB = rootIndexNext + (j + 1) % (roundSegments + 1);
                     
                     triIndices.Add(nextA);
                     triIndices.Add(currentA);
@@ -100,13 +118,84 @@ public class VineSegment : MonoBehaviour
             }
         }
         
+        //Leaf vine placement
+        List<int> leafTriangles = new List<int>();
+        for (int i = 0; i < path.NumSegments - 1; i++)
+        {
+            for (int j = -1; j < 2; j += 2)
+            {
+                int amountVineVertice = verts.Count;
+
+                Vector3 upLeaf = Vector3.Lerp(points[i * 3].rot * Vector3.up, points[(i + 1) * 3].rot * Vector3.up, 0);
+                Vector3 upLeafNext = Vector3.Lerp(points[i * 3].rot * Vector3.up, points[(i + 1) * 3].rot * Vector3.up, 0.5f);
+                OrientedPoint opLeaf = GetBezierPoint(0, i, upLeaf);
+                OrientedPoint opLeafNext = GetBezierPoint(0.5f, i, upLeafNext);
+                
+
+                
+                Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.right * 0.1f);
+                Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.right * 0.1f);
+                Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.up * 0.1f, Color.red);
+                Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.up * 0.1f, Color.red);
+                
+                Debug.Log(opLeaf.rot * Vector3.right + "    " + (opLeaf.rot * Vector3.right).magnitude);
+
+                opLeaf.pos = removeTransform(opLeaf.pos);
+                opLeafNext.pos = removeTransform(opLeafNext.pos);
+                
+                // Vector3 upOffset = opLeaf.LocalToWorldVect(Vector3.up * vineDiameter);
+                // upOffset = Quaternion.Inverse(transform.rotation) * upOffset;
+                // Vector3 upOffsetNext = opLeafNext.LocalToWorldVect(Vector3.up * vineDiameter);
+                // upOffsetNext = Quaternion.Inverse(transform.rotation) * upOffsetNext;
+
+                float x = Vector3.Distance(opLeaf.pos, opLeafNext.pos) / 2;
+            
+                verts.Add((opLeaf.pos + opLeaf.rot * Vector3.up * 0.05f));
+                verts.Add((opLeafNext.pos + opLeafNext.rot * Vector3.up * 0.05f));
+                verts.Add(new Vector3(j * 0.1f, 0, 0) + opLeafNext.pos + opLeafNext.rot * Vector3.up * 0.05f);
+                verts.Add(new Vector3(j * 0.1f, 0, 0) + opLeaf.pos + opLeaf.rot * Vector3.up * 0.05f);
+                
+            
+                uvs.Add(new Vector2(1, 0));
+                uvs.Add(new Vector2(0, 0));
+                uvs.Add(new Vector2(0, 1));
+                uvs.Add(new Vector2(1, 1));
+            
+                for (int k = 0; k < 4; k++)
+                {
+                    normals.Add(opLeaf.rot * Vector3.up);
+                }
+        
+                leafTriangles.Add(amountVineVertice);
+                leafTriangles.Add(amountVineVertice + 1);
+                leafTriangles.Add(amountVineVertice + 2);
+        
+                leafTriangles.Add(amountVineVertice + 2);
+                leafTriangles.Add(amountVineVertice + 3);
+                leafTriangles.Add(amountVineVertice);
+            }
+        }
+
+        mesh.subMeshCount = 2;
+        
         mesh.SetVertices(verts);
         mesh.SetTriangles(triIndices, 0);
+        mesh.SetTriangles(leafTriangles, 1);
         mesh.SetNormals(normals);
         mesh.SetUVs(0, uvs);
     }
 
     private void Update() => GenerateMesh();
+
+    private Vector3 removeTransform(Vector3 pos)
+    {
+        pos -= transform.position;
+        pos = Quaternion.Inverse(transform.rotation) * pos;
+        Vector3 scale = transform.localScale;
+        pos = new Vector3(pos.x / scale.x, pos.y / scale.y, pos.z / scale.z);
+
+        return pos;
+    }
     
     private void CalcLengthTableInto(float[] arr, int segment)
     {
