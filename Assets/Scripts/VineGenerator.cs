@@ -142,11 +142,11 @@ public class VineGenerator : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(origin.pos + origin.rot * Vector3.up * 0.1f, dir, out hit, stepSize))
             {
-                Gizmos.color = Color.white;
-                Gizmos.DrawSphere(hit.point, 0.02f);
-                Gizmos.color = Color.red;
-                Gizmos.DrawSphere(origin.pos + origin.rot * Vector3.up * 0.1f, 0.01f);
-                Debug.DrawRay(origin.pos + origin.rot * Vector3.up * 0.1f, dir, Color.red);
+                // Gizmos.color = Color.white;
+                // Gizmos.DrawSphere(hit.point, 0.02f);
+                // Gizmos.color = Color.red;
+                // Gizmos.DrawSphere(origin.pos + origin.rot * Vector3.up * 0.1f, 0.01f);
+                // Debug.DrawRay(origin.pos + origin.rot * Vector3.up * 0.1f, dir, Color.red);
                 
                 //Debug.DrawRay(origin.pos, origin.rot * Vector3.up * 0.1f, Color.green);
                 origin.pos = hit.point - dir * 0.01f;

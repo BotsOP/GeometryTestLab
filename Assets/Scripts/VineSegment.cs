@@ -74,24 +74,6 @@ public class VineSegment : MonoBehaviour
                     normals.Add(dir);
                     uvs.Add(new Vector2(u,  fArr.Sample(t)));
                 }
-                
-                // //Leaf vine placement
-                // amountVineVertice = verts.Count - 1;
-                //
-                // verts.Add(op.rot * new Vector3(0, 0, -1) * leafSize);
-                // verts.Add(op.rot * new Vector3(0, 0, 1) * leafSize);
-                // verts.Add(op.rot * new Vector3(1, 0, 1) * leafSize);
-                // verts.Add(op.rot * new Vector3(1, 0, -1) * leafSize);
-                //
-                // uvs.Add(new Vector2(0, 0));
-                // uvs.Add(new Vector2(0, 1));
-                // uvs.Add(new Vector2(1, 1));
-                // uvs.Add(new Vector2(1, 0));
-                //
-                // for (int j = 0; j < 4; j++)
-                // {
-                //     normals.Add(op.rot * Vector3.up);
-                // }
             }
             
             //Triangle linking
@@ -130,29 +112,22 @@ public class VineSegment : MonoBehaviour
                 Vector3 upLeafNext = Vector3.Lerp(points[i * 3].rot * Vector3.up, points[(i + 1) * 3].rot * Vector3.up, 0.5f);
                 OrientedPoint opLeaf = GetBezierPoint(0, i, upLeaf);
                 OrientedPoint opLeafNext = GetBezierPoint(0.5f, i, upLeafNext);
-                
 
-                
-                // Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.right * 0.1f);
-                // Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.right * 0.1f);
-                // Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.up * 0.1f, Color.red);
-                // Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.up * 0.1f, Color.red);
-                
-                opLeaf.pos = removeTransform(opLeaf.pos);
-                opLeafNext.pos = removeTransform(opLeafNext.pos);
-                
-                // Vector3 upOffset = opLeaf.LocalToWorldVect(Vector3.up * vineDiameter);
-                // upOffset = Quaternion.Inverse(transform.rotation) * upOffset;
-                // Vector3 upOffsetNext = opLeafNext.LocalToWorldVect(Vector3.up * vineDiameter);
-                // upOffsetNext = Quaternion.Inverse(transform.rotation) * upOffsetNext;
+                float vineSize = vineSizeCurve.Evaluate((float)i / (path.NumSegments - 1));
+                float vineSizeNext = vineSizeCurve.Evaluate((float)(i + 1) / (path.NumSegments - 1));
 
-                float x = Vector3.Distance(opLeaf.pos, opLeafNext.pos) / 2;
-            
-                verts.Add((opLeaf.pos + opLeaf.rot * Vector3.up * 0.05f));
-                verts.Add((opLeafNext.pos + opLeafNext.rot * Vector3.up * 0.05f));
-                verts.Add(new Vector3(j * 0.1f, 0, 0) + opLeafNext.pos + opLeafNext.rot * Vector3.up * 0.05f);
-                verts.Add(new Vector3(j * 0.1f, 0, 0) + opLeaf.pos + opLeaf.rot * Vector3.up * 0.05f);
+                Vector3 vineOffset = opLeaf.LocalToWorldPosition(Vector3.up * (vineDiameter * vineSize));
+                Vector3 vineOffsetNext = opLeafNext.LocalToWorldPosition(Vector3.up * (vineDiameter * vineSizeNext));
+
+                float x = Vector3.Distance(vineOffset, vineOffsetNext);
                 
+                Vector3 vineOffsetRight = opLeafNext.LocalToWorldPosition(new Vector3(j * x, 0, 0) + Vector3.up * (vineDiameter * vineSizeNext));
+                Vector3 vineOffsetNextRight = opLeaf.LocalToWorldPosition(new Vector3(j * x, 0, 0) + Vector3.up * (vineDiameter * vineSize));
+                
+                verts.Add(removeTransform(vineOffset));
+                verts.Add(removeTransform(vineOffsetNext));
+                verts.Add(removeTransform(vineOffsetRight));
+                verts.Add(removeTransform(vineOffsetNextRight));
             
                 uvs.Add(new Vector2(1, 0));
                 uvs.Add(new Vector2(0, 0));
@@ -163,7 +138,18 @@ public class VineSegment : MonoBehaviour
                 {
                     normals.Add(opLeaf.rot * Vector3.up);
                 }
+
+                if (j == -1)
+                {
+                    leafTriangles.Add(amountVineVertice + 2);
+                    leafTriangles.Add(amountVineVertice + 1);
+                    leafTriangles.Add(amountVineVertice);
         
+                    leafTriangles.Add(amountVineVertice);
+                    leafTriangles.Add(amountVineVertice + 3);
+                    leafTriangles.Add(amountVineVertice + 2);
+                    continue;
+                }
                 leafTriangles.Add(amountVineVertice);
                 leafTriangles.Add(amountVineVertice + 1);
                 leafTriangles.Add(amountVineVertice + 2);

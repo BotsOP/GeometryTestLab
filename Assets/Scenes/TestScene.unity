@@ -359,7 +359,7 @@ GameObject:
   - component: {fileID: 332487325}
   - component: {fileID: 332487328}
   - component: {fileID: 332487327}
-  - component: {fileID: 332487329}
+  - component: {fileID: 332487326}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: Untagged
@@ -382,6 +382,20 @@ Transform:
   m_Father: {fileID: 1798983423}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 18.77, y: 49.907, z: 33.2}
+--- !u!136 &332487326
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332487324}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5000001
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!23 &332487327
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -431,21 +445,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 332487324}
-  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
---- !u!64 &332487329
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 332487324}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -567,7 +567,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 715504550}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.187, y: 5.747523, z: -2.094}
+  m_LocalPosition: {x: 2.84, y: 5.747523, z: -0.603}
   m_LocalScale: {x: 2.7147, y: 2.7147, z: 2.7147}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -607,7 +607,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9d604bfd733faa94e83f6920aca0da1b, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -718,56 +718,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 321.057, z: 0}
---- !u!1 &783843875
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 783843877}
-  - component: {fileID: 783843876}
-  m_Layer: 0
-  m_Name: VineGenerator (1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &783843876
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783843875}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c31fb1a80266a754f82dfd560b173870, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  vinePoints: 36
-  stepSize: 0.204
-  randomMaxAngle: 25.6
-  randomMinAngle: 0
-  randomSeed: 580
-  vines: {fileID: 0}
---- !u!4 &783843877
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783843875}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -844,8 +794,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.3883757, y: 0.32391366, z: -0.14511259, w: 0.8504038}
-  m_LocalPosition: {x: -0.50369453, y: 2.1627693, z: -0.67070675}
+  m_LocalRotation: {x: 0.17885679, y: -0, z: -0, w: 0.9838751}
+  m_LocalPosition: {x: 0, y: 8.63, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -861,8 +811,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1016010641}
-  - component: {fileID: 1016010644}
   - component: {fileID: 1016010640}
+  - component: {fileID: 1016010644}
   - component: {fileID: 1016010643}
   - component: {fileID: 1016010642}
   m_Layer: 0
@@ -886,8 +836,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roundSegments: 16
   curveSegments: 8
-  vineDiameter: 0.043
-  leafSize: 0.087
+  vineDiameter: 0.064
+  leafSize: 1
   vineSizeCurve:
     serializedVersion: 2
     m_Curve:
@@ -900,15 +850,6 @@ MonoBehaviour:
       weightedMode: 0
       inWeight: 0
       outWeight: 0.34836823
-    - serializedVersion: 3
-      time: 0.017188773
-      value: 1
-      inSlope: -0.00898108
-      outSlope: -0.00898108
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
     - serializedVersion: 3
       time: 0.91128993
       value: 0.7335427
@@ -937,14 +878,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1016010639}
-  m_LocalRotation: {x: -0, y: -0.42151392, z: -0, w: 0.90682197}
-  m_LocalPosition: {x: 0, y: -0.073, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -1.038, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: -49.86, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1016010642
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1008,11 +949,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c31fb1a80266a754f82dfd560b173870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vinePoints: 14
-  stepSize: 0.312
-  randomMaxAngle: 0
+  vinePoints: 28
+  stepSize: 0.37
+  randomMaxAngle: 5.5
   randomMinAngle: 0
-  randomSeed: 221
+  randomSeed: 306
   vines: {fileID: 1016010640}
 --- !u!1 &1084206706
 GameObject:
@@ -1602,7 +1543,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1798983422}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.39612, y: -5.729, z: 3.914598}
+  m_LocalPosition: {x: -3.39612, y: -6.712523, z: 3.914598}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
