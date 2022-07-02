@@ -133,13 +133,11 @@ public class VineSegment : MonoBehaviour
                 
 
                 
-                Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.right * 0.1f);
-                Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.right * 0.1f);
-                Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.up * 0.1f, Color.red);
-                Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.up * 0.1f, Color.red);
+                // Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.right * 0.1f);
+                // Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.right * 0.1f);
+                // Debug.DrawRay(opLeaf.pos, opLeaf.rot * Vector3.up * 0.1f, Color.red);
+                // Debug.DrawRay(opLeafNext.pos, opLeafNext.rot * Vector3.up * 0.1f, Color.red);
                 
-                Debug.Log(opLeaf.rot * Vector3.right + "    " + (opLeaf.rot * Vector3.right).magnitude);
-
                 opLeaf.pos = removeTransform(opLeaf.pos);
                 opLeafNext.pos = removeTransform(opLeafNext.pos);
                 
@@ -183,6 +181,8 @@ public class VineSegment : MonoBehaviour
         mesh.SetTriangles(leafTriangles, 1);
         mesh.SetNormals(normals);
         mesh.SetUVs(0, uvs);
+        
+        mesh.RecalculateBounds();
     }
 
     private void Update() => GenerateMesh();

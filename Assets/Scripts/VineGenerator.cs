@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class VineGenerator : MonoBehaviour
 {
@@ -27,6 +30,16 @@ public class VineGenerator : MonoBehaviour
         Vector3.up
     };
     private void Update()
+    {
+        points.Clear();
+
+        Random.seed = randomSeed;
+        GetVineGrowth();
+
+        vines.points = points;
+    }
+
+    private void OnDrawGizmos()
     {
         points.Clear();
 
@@ -115,23 +128,33 @@ public class VineGenerator : MonoBehaviour
 
     private OrientedPoint CalculateNextPoint(OrientedPoint origin)
     {
-        origin.pos = origin.LocalToWorldPosition(Vector3.up * 0.02f);
+        Vector3 originalPos = origin.pos;
+        //update this to use hit.normal
+        //origin.pos = origin.LocalToWorldPosition(Vector3.up * 0.1f);
+
         float randomAngle = Random.Range(-1 * (randomMaxAngle - randomMinAngle), randomMaxAngle - randomMinAngle) + randomMinAngle;
         origin.rot *= Quaternion.Euler(0, randomAngle, 0);
 
         for (int i = 0; i < dirs.Length; i++)
         {
             Vector3 dir = (origin.rot * dirs[i] * stepSize);
-            
+            //Debug.DrawRay(origin.pos, dir, Color.blue);
             RaycastHit hit;
-            if (Physics.Raycast(origin.pos, dir, out hit, stepSize))
+            if (Physics.Raycast(origin.pos + origin.rot * Vector3.up * 0.1f, dir, out hit, stepSize))
             {
-                //Debug.DrawRay(origin.pos, dir * 0.1f, Color.red);
+                Gizmos.color = Color.white;
+                Gizmos.DrawSphere(hit.point, 0.02f);
+                Gizmos.color = Color.red;
+                Gizmos.DrawSphere(origin.pos + origin.rot * Vector3.up * 0.1f, 0.01f);
+                Debug.DrawRay(origin.pos + origin.rot * Vector3.up * 0.1f, dir, Color.red);
+                
                 //Debug.DrawRay(origin.pos, origin.rot * Vector3.up * 0.1f, Color.green);
                 origin.pos = hit.point - dir * 0.01f;
                 
-                origin.rot = Quaternion.LookRotation(Quaternion.AngleAxis(-90, transform.rotation * Vector3.left) * hit.normal, hit.normal);
-                //Debug.DrawRay(origin.pos, Quaternion.AngleAxis(-90, transform.rotation * Vector3.left) * hit.normal * 0.1f, Color.cyan);
+                //origin.rot = Quaternion.LookRotation(Quaternion.AngleAxis(-90, transform.rotation * Vector3.left) * hit.normal, hit.normal);
+                origin.rot = Quaternion.LookRotation(hit.point - originalPos, hit.normal);
+                //Debug.DrawRay(origin.pos, origin.rot * Vector3.up * 0.15f, Color.cyan);
+                //Debug.DrawRay(origin.pos, origin.rot * Vector3.forward * 0.15f, Color.red);
                 break;
             }
             //Debug.DrawRay(origin.pos, dir, Color.white);
