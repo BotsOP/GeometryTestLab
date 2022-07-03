@@ -179,7 +179,8 @@ public class VineSegment : MonoBehaviour
         
         List<Vector3> verts = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
-        List<Vector2> uvs = new List<Vector2>();
+        List<Vector2> uvs0 = new List<Vector2>();
+        List<Vector2> uvs1 = new List<Vector2>();
         List<int> triIndices = new List<int>();
         List<int> leafTriangles = new List<int>();
 
@@ -190,6 +191,23 @@ public class VineSegment : MonoBehaviour
             List<OrientedPoint> points = pointsArray[vineIndex];
             path.SetList(points.Select(point => point.pos).ToList());
 
+            //Gets total length and an array with the length of each segment up until that point
+            float totalLength = 0;
+            float[] sumLength = new float[path.NumSegments];
+            sumLength[0] = 0;
+            for (int vineSegment = 0; vineSegment < path.NumSegments; vineSegment++)
+            {
+                float[] fArr = new float[16];
+                CalcLengthTableInto(fArr, vineSegment);
+                float segmentLength = fArr.Sample(1);
+                
+                totalLength += segmentLength;
+                
+                if(vineSegment > 0)
+                    sumLength[vineSegment] = sumLength[vineSegment - 1] + segmentLength;
+            }
+            
+            //Calculates the position, normal, uv for textures and uv for vinegrowth
             for (int vineSegment = 0; vineSegment < path.NumSegments; vineSegment++)
             {
                 float[] fArr = new float[16];
@@ -199,21 +217,20 @@ public class VineSegment : MonoBehaviour
                 {
                     float t = curveSegment / (curveSegments - 1f);
                     
+                    //Vinesize
                     float vineSize = (float)vineSegment / (path.NumSegments - 1);
                     float vineSizeNext = (float)(vineSegment + 1) / (path.NumSegments - 1);
                     vineSize = Mathf.Lerp(vineSize, vineSizeNext, t);
                     vineSize = vineSizeCurve.Evaluate(vineSize);
                     
+                    //Vine orientation
                     Vector3 up = Vector3.Lerp(points[vineSegment * 3].rot * Vector3.up, points[(vineSegment + 1) * 3].rot * Vector3.up, t);
                     OrientedPoint op = GetBezierPoint(t, vineSegment, up);
-                    
-                    Debug.DrawRay(op.pos, op.rot * Vector3.forward * 0.1f, Color.blue);
-                    Debug.DrawRay(op.pos, op.rot * Vector3.up * 0.1f, Color.green);
-                    Debug.DrawRay(op.pos, op.rot * Vector3.right * 0.1f, Color.red);
-                    
+
                     //Vine vertex placement
                     for (int vertex = 0; vertex < roundSegments + 1; vertex++)
                     {
+                        //Vine vertex position
                         float u = (float)vertex / roundSegments;
                         float amountDegrees = 360 / roundSegments * (vertex % roundSegments);
                         Vector3 dir = op.LocalToWorldVect(Quaternion.Euler(0, 0, amountDegrees) * Vector3.right * (vineDiameter * vineSize));
@@ -225,7 +242,8 @@ public class VineSegment : MonoBehaviour
 
                         verts.Add(newPos + Vector3.one * 0.001f);
                         normals.Add(dir);
-                        uvs.Add(new Vector2(u,  fArr.Sample(t)));
+                        uvs0.Add(new Vector2(u,  fArr.Sample(t)));
+                        uvs1.Add(new Vector2(u, (fArr.Sample(t) + sumLength[vineSegment]) / totalLength));
                     }
                 }
                 
@@ -254,25 +272,34 @@ public class VineSegment : MonoBehaviour
             }
             
             //Leaf vine placement
-            for (int i = 0; i < path.NumSegments - 1; i++)
+            for (int vineSegment = 0; vineSegment < path.NumSegments - 1; vineSegment++)
             {
+                float[] fArr = new float[16];
+                CalcLengthTableInto(fArr, vineSegment);
+                
                 for (int j = -1; j < 2; j += 2)
                 {
                     int amountVineVertice = verts.Count;
-
-                    Vector3 upLeaf = Vector3.Lerp(points[i * 3].rot * Vector3.up, points[(i + 1) * 3].rot * Vector3.up, 0);
-                    Vector3 upLeafNext = Vector3.Lerp(points[i * 3].rot * Vector3.up, points[(i + 1) * 3].rot * Vector3.up, 0.5f);
-                    OrientedPoint opLeaf = GetBezierPoint(0, i, upLeaf);
-                    OrientedPoint opLeafNext = GetBezierPoint(0.5f, i, upLeafNext);
-
-                    float vineSize = vineSizeCurve.Evaluate((float)i / (path.NumSegments - 1));
-                    float vineSizeNext = vineSizeCurve.Evaluate((float)(i + 1) / (path.NumSegments - 1));
-
+                    
+                    //Calculates the up vector
+                    Vector3 upLeaf = Vector3.Lerp(points[vineSegment * 3].rot * Vector3.up, points[(vineSegment + 1) * 3].rot * Vector3.up, 0);
+                    Vector3 upLeafNext = Vector3.Lerp(points[vineSegment * 3].rot * Vector3.up, points[(vineSegment + 1) * 3].rot * Vector3.up, 0.5f);
+                    //Gets the right leaf points
+                    OrientedPoint opLeaf = GetBezierPoint(0, vineSegment, upLeaf);
+                    OrientedPoint opLeafNext = GetBezierPoint(0.5f, vineSegment, upLeafNext);
+                    
+                    //Gets the vine diameter
+                    float vineSize = vineSizeCurve.Evaluate((float)vineSegment / (path.NumSegments - 1));
+                    float vineSizeNext = vineSizeCurve.Evaluate((float)(vineSegment + 1) / (path.NumSegments - 1));
+                    
+                    //Gets the top part of the vine
                     Vector3 vineOffset = opLeaf.LocalToWorldPosition(Vector3.up * (vineDiameter * vineSize));
                     Vector3 vineOffsetNext = opLeafNext.LocalToWorldPosition(Vector3.up * (vineDiameter * vineSizeNext));
-
+                    
+                    //Calculates height based of the width
                     float x = Vector3.Distance(vineOffset, vineOffsetNext);
                     
+                    //Gets the top part of the vine + offset
                     Vector3 vineOffsetRight = opLeafNext.LocalToWorldPosition(new Vector3(j * x, 0, 0) + Vector3.up * (vineDiameter * vineSizeNext));
                     Vector3 vineOffsetNextRight = opLeaf.LocalToWorldPosition(new Vector3(j * x, 0, 0) + Vector3.up * (vineDiameter * vineSize));
                     
@@ -280,11 +307,19 @@ public class VineSegment : MonoBehaviour
                     verts.Add(removeTransform(vineOffsetNext));
                     verts.Add(removeTransform(vineOffsetRight));
                     verts.Add(removeTransform(vineOffsetNextRight));
-                
-                    uvs.Add(new Vector2(1, 0));
-                    uvs.Add(new Vector2(0, 0));
-                    uvs.Add(new Vector2(0, 1));
-                    uvs.Add(new Vector2(1, 1));
+                    
+                    uvs0.Add(new Vector2(1, 0));
+                    uvs0.Add(new Vector2(0, 0));
+                    uvs0.Add(new Vector2(0, 1));
+                    uvs0.Add(new Vector2(1, 1));
+                    
+                    float vLength = (fArr.Sample(0) + sumLength[vineSegment]) / totalLength;
+                    float vLengthNext = (fArr.Sample(0.5f) + sumLength[vineSegment]) / totalLength;
+                    
+                    uvs1.Add(new Vector2(1, vLength));
+                    uvs1.Add(new Vector2(0, vLength));
+                    uvs1.Add(new Vector2(0, vLengthNext));
+                    uvs1.Add(new Vector2(1, vLengthNext));
                 
                     for (int k = 0; k < 4; k++)
                     {
@@ -320,7 +355,8 @@ public class VineSegment : MonoBehaviour
         mesh.SetTriangles(triIndices, 0);
         mesh.SetTriangles(leafTriangles, 1);
         mesh.SetNormals(normals);
-        mesh.SetUVs(0, uvs);
+        mesh.SetUVs(0, uvs0);
+        mesh.SetUVs(1, uvs1);
 
         mesh.RecalculateBounds();
     }

@@ -22,8 +22,7 @@ public class VineGenerator : MonoBehaviour
 
     [SerializeField] private VineSegment vines;
 
-    [HideInInspector] public List<OrientedPoint>[] pointsArray;
-    public Transform[] transforms;
+    public List<OrientedPoint>[] pointsArray;
     
     private readonly Vector3[] dirs = 
     {
@@ -48,9 +47,8 @@ public class VineGenerator : MonoBehaviour
             float angRad = t * MathLibrary.TAU;
             Vector3 dir =  new Vector3(MathLibrary.GetVectorByAngle(angRad).x, 0, MathLibrary.GetVectorByAngle(angRad).y);
             GetVineGrowth(pointsArray[i], Quaternion.LookRotation(dir));
-        
-            vines.GenerateMesh(pointsArray);
         }
+        vines.GenerateMesh(pointsArray);
     }
 
     // private void Update()
@@ -92,8 +90,6 @@ public class VineGenerator : MonoBehaviour
         Gizmos.color = Color.white;
         OrientedPoint currentOP = new OrientedPoint(transform.position, offsetRotation);
         points.Add(currentOP);
-        
-        Debug.Log(vinePoints);
         
         for (int i = 0; i < vinePoints; i++)
         {

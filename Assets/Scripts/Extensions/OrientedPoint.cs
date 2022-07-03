@@ -16,13 +16,23 @@ public struct OrientedPoint
     public OrientedPoint(Vector3 pos, Vector3 forward, Vector3 up)
     {
         this.pos = pos;
-        rot = Quaternion.LookRotation(forward, up);
+        if (forward != Vector3.zero)
+        {
+            rot = Quaternion.LookRotation(forward, up);
+            return;
+        }
+        rot = Quaternion.identity;
     }
         
     public OrientedPoint(Vector3 pos, Vector3 forward)
     {
         this.pos = pos;
-        rot = Quaternion.LookRotation(forward);
+        if (forward != Vector3.zero)
+        {
+            rot = Quaternion.LookRotation(forward);
+            return;
+        }
+        rot = Quaternion.identity;
     }
 
     public Vector3 LocalToWorldPosition(Vector3 localPos)
