@@ -206,9 +206,7 @@ public static class FloatArrayExtensions
         {
             return fArr[0];
         }
-        //Debug.Log(fArr[idLower] + "   " + fArr[idUpper] + "   " + (iFloat - idLower) + "       " + Mathf.Lerp(fArr[idLower], fArr[idUpper], (iFloat - idLower)));
         return Mathf.Lerp(fArr[idLower], fArr[idUpper], iFloat - idLower);
-
     }
 }
 
