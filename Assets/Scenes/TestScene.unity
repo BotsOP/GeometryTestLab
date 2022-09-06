@@ -984,7 +984,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80230f2c5da9b5c43b1becaf06f64ace, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roundSegments: 16
+  roundSegments: 14
   curveSegments: 8
   vineDiameter: 0.045
   leafSize: 1
@@ -1104,10 +1104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c31fb1a80266a754f82dfd560b173870, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vinePoints: 37
-  amountVines: 20
-  stepSize: 0.16
-  randomMaxAngle: 7.3
+  vinePoints: 64
+  amountVines: 19
+  stepSize: 0.13
+  randomMaxAngle: 32.6
   randomMinAngle: 0
   randomSeed: 466
   vines: {fileID: 1016010640}
