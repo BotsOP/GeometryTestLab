@@ -1,56 +1,78 @@
 // Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel CalculateVertex
+#pragma kernel CalculateIndex
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 
 RWByteAddressBuffer bufVertices;
-RWByteAddressBuffer bufIndices;
+RWByteAddressBuffer bufIndice;
 
 RWStructuredBuffer<float3> pathPoints;
+RWStructuredBuffer<float3> bufOldVertices;
 
-// void Store(RWByteAddressBuffer buf, int index, float v)
-// {
-//     uint3 data = asuint(v);
-//     buf.Store3((index*3)<<2, data);
-// }
+int roundSegments;
 
-[numthreads(64,1,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+[numthreads(1,1,1)]
+void CalculateVertex (uint3 id : SV_DispatchThreadID)
 {
-    bufVertices.Store3(sizeof(float3) * id.x, asuint(float3(0, 1, 0) + pathPoints[id.x]));
-    bufVertices.Store3(id.x * 3 + 1, asuint(float3(1, 0, 0) + pathPoints[id.x]));
-    bufVertices.Store3(id.x * 3 + 2, asuint(float3(0, -1, 0) + pathPoints[id.x]));
-    bufVertices.Store3(id.x * 3 + 3, asuint(float3(-1, 0, 0) + pathPoints[id.x]));
-    // Store(bufVertices, id.x, float3(0, 1, 0) + pathPoints[id.x]);
-    // Store(bufVertices, id.x + 1, float3(1, 0, 0) + pathPoints[id.x]);
-    // Store(bufVertices, id.x + 2, float3(0, -1, 0) + pathPoints[id.x]);
-    // Store(bufVertices, id.x + 3, float3(-1, 0, 0) + pathPoints[id.x]);
-
-    // for (int i = 0; i < 4; i++)
+    // for (int i = 0; i < roundSegments; i++)
     // {
-    //     for (int j = 0; j < 3; j++)
-    //     {
-    //         int index = id.x + i + j;
-    //         int A = id.x + i;
-    //         int B = id.x + i + 1;
-    //         int Anext = id.x + i + 4;
-    //         int Bnext = id.x + i + 4 + 1;
+    //     float float_i = i;
+    //     float float_rs = roundSegments;
+    //     float angle = 3.14159265f * 2.0f * float_i / float_rs;
+    //     float x = cos(angle);
+    //     float y = sin(angle);
     //
-    //         if(i % 2 == 0)
-    //         {
-    //             Store(bufVertices, index, A);
-    //             Store(bufVertices, index, Anext);
-    //             Store(bufVertices, index, B);
-    //         }
-    //         else
-    //         {
-    //             Store(bufVertices, index, B);
-    //             Store(bufVertices, index, Anext);
-    //             Store(bufVertices, index, Bnext);
-    //         }
-    //         
-    //     }
+    //     bufVertices.Store3((i + roundSegments * id.x) * 12, asuint(float3(x, y, 10 * id.x)));
     // }
+
+    int currentVertex = id.x % roundSegments;
+    int currentSegment = id.x / roundSegments;
+    currentSegment = floor(currentSegment);
+
+    float angle = 3.14159265f * 2.0f * (float)currentVertex / (float)roundSegments;
+    float x = cos(angle);
+    float y = sin(angle);
+    //bufVertices.Store3((currentVertex + roundSegments * currentSegment) * 12, asuint(float3(x, y, 10 * currentSegment)));
+    bufVertices.Store3(id.x * 12, asuint(float3(x, y, 10 * currentSegment)));
+}
+
+[numthreads(1,1,1)]
+void CalculateIndex (uint3 id : SV_DispatchThreadID)
+{
+    int rootIndex = id.x;
+    int A = rootIndex;
+    int B = (rootIndex + 1) % roundSegments;
+    int Anext = rootIndex + roundSegments;
+    int Bnext = (rootIndex + 1) % roundSegments + roundSegments;
+
+    int localAddress = id.x * 6;
+        
+    bufIndice.Store((localAddress + 0) * 4, asuint(A));
+    bufIndice.Store((localAddress + 1) * 4, asuint(B));
+    bufIndice.Store((localAddress + 2) * 4, asuint(Anext));
+        
+    bufIndice.Store((localAddress + 3) * 4, asuint(B));
+    bufIndice.Store((localAddress + 4) * 4, asuint(Bnext));
+    bufIndice.Store((localAddress + 5) * 4, asuint(Anext));
     
+    // for (int i = 0; i < roundSegments; i++)
+    // {
+    //     int rootIndex = i;
+    //     int A = rootIndex;
+    //     int B = (rootIndex + 1) % roundSegments;
+    //     int Anext = rootIndex + roundSegments;
+    //     int Bnext = (rootIndex + 1) % roundSegments + roundSegments;
+    //
+    //     int localAddress = i * 6;
+    //     
+    //     bufIndice.Store((localAddress + 0) * 4, asuint(A));
+    //     bufIndice.Store((localAddress + 1) * 4, asuint(B));
+    //     bufIndice.Store((localAddress + 2) * 4, asuint(Anext));
+    //     
+    //     bufIndice.Store((localAddress + 3) * 4, asuint(B));
+    //     bufIndice.Store((localAddress + 4) * 4, asuint(Bnext));
+    //     bufIndice.Store((localAddress + 5) * 4, asuint(Anext));
+    // }
 }

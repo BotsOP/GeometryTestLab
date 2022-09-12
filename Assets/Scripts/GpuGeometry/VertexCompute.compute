@@ -1,0 +1,58 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+RWByteAddressBuffer bufVertices;
+RWByteAddressBuffer bufIndices;
+
+RWStructuredBuffer<float3> pathPoints;
+RWStructuredBuffer<float3> bufOldVertices;
+
+// void Store(RWByteAddressBuffer buf, int index, float v)
+// {
+//     uint3 data = asuint(v);
+//     buf.Store3((index*3)<<2, data);
+// }
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float3 vPos = bufOldVertices[id.x];
+    bufVertices.Store3(id.x * 12, float3(10, -10, 0));
+    bufVertices.Store3((id.x + 1) * 12, float3(-10, 10, 0));
+    bufVertices.Store3((id.x + 2) * 12, float3(10, 10, 0));
+    bufVertices.Store3((id.x + 3) * 12, float3(-10, -10, 0));
+
+    bufIndices.Store((id.x) * 4, asuint(id.x));
+    bufIndices.Store((id.x + 1) * 4, asuint(id.x));
+    bufIndices.Store((id.x + 2) * 4, asuint(id.x));
+
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     for (int j = 0; j < 3; j++)
+    //     {
+    //         int index = id.x + i + j;
+    //         int A = id.x + i;
+    //         int B = id.x + i + 1;
+    //         int Anext = id.x + i + 4;
+    //         int Bnext = id.x + i + 4 + 1;
+    //
+    //         if(i % 2 == 0)
+    //         {
+    //             Store(bufVertices, index, A);
+    //             Store(bufVertices, index, Anext);
+    //             Store(bufVertices, index, B);
+    //         }
+    //         else
+    //         {
+    //             Store(bufVertices, index, B);
+    //             Store(bufVertices, index, Anext);
+    //             Store(bufVertices, index, Bnext);
+    //         }
+    //         
+    //     }
+    // }
+    
+}

@@ -40,7 +40,7 @@ Material:
     m_Floats:
     - _Clip: 1
     - _EmissionStrength: 1
-    - _Grow: 0.7182038
+    - _Grow: 0.7417241
     - _Metallic: 0
     - _QueueControl: 0
     - _QueueOffset: 0

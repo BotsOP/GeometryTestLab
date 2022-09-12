@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class VineSegment : MonoBehaviour
@@ -24,6 +25,7 @@ public class VineSegment : MonoBehaviour
     private void Awake()
     {
         mesh = new Mesh();
+        mesh.indexFormat = IndexFormat.UInt32;
         GetComponent<MeshFilter>().sharedMesh = mesh;
         mesh.name = "vines";
     }
