@@ -9,8 +9,8 @@ using UnityEngine.Rendering;
 public class Vines : MonoBehaviour
 {
 	[SerializeField] private ComputeShader computeShader;
-	[SerializeField] [Range(4, 64)]private int roundSegments = 16;
-	[SerializeField] [Range(2, 16)] private int bezierSubSegments = 3;
+	[SerializeField] [Range(4, 256)]private int roundSegments = 16;
+	[SerializeField] [Range(2, 256)] private int bezierSubSegments = 3;
 	[SerializeField] private Transform[] transformArray;
 	
 	[SerializeField] private bool updateMesh = true;
@@ -20,7 +20,7 @@ public class Vines : MonoBehaviour
 	private Mesh newMesh;
 
 	private int TotalVerts => 2 * roundSegments + (bezierSubSegments - 2) * roundSegments;
-	private int TotalIndice => TotalVerts * 3;
+	private int TotalIndice => TotalVerts * 6 - (roundSegments * 6);
 
 	// Buffers for GPU compute shader path
 	GraphicsBuffer gpuVertices;
@@ -80,13 +80,14 @@ public class Vines : MonoBehaviour
 		computeShader.SetBuffer(0, "pathPoints", pathPoints);
 		computeShader.SetBuffer(0, "bufVertices", gpuVertices);
 		computeShader.SetBuffer(1, "bufIndice", gpuIndice);
-		computeShader.Dispatch(0, (newMesh.vertexCount + 64 - 1) / 64, 1, 1);
-		computeShader.Dispatch(1, (roundSegments + 32 - 1) / 32, 1, 1);
+		computeShader.Dispatch(0, (TotalVerts + 64 - 1) / 64, 1, 1);
+		computeShader.Dispatch(1, (TotalVerts + 32 - 1) / 32, 1, 1);
 
 		Vector3[] vertex = new Vector3[TotalVerts];
 		gpuVertices.GetData(vertex);
 		int[] index = new int[TotalIndice];
 		gpuIndice.GetData(index);
+		int i = 3 % 4;
 	}
 	
 	private void UpdateMesh()
@@ -113,7 +114,6 @@ public class Vines : MonoBehaviour
 		
 		gpuVertices = newMesh.GetVertexBuffer(0);
 		gpuIndice = newMesh.GetIndexBuffer();
-		//GetComponent<MeshFilter>().mesh = newMesh;
 	}
 
 	private void CreateMesh()
@@ -139,7 +139,10 @@ public class Vines : MonoBehaviour
 			indice[i] = 0;
 		}
 		
-		//newMesh.SetVertexBufferParams(newMesh.vertexCount, new VertexAttributeDescriptor(VertexAttribute.Position, stream: 0));
+		newMesh.SetVertexBufferParams(newMesh.vertexCount, 
+		                              new VertexAttributeDescriptor(VertexAttribute.Position, stream: 0), 
+		                              new VertexAttributeDescriptor(VertexAttribute.Normal, stream: 0)
+			);
 		
 		newMesh.SetVertices(vertPos);
 		newMesh.triangles = indice;

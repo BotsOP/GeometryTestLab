@@ -18,38 +18,23 @@ float3 getMatrixPos(float4x4 mat)
     return float3(mat[0].w, mat[1].w, mat[2].w);
 }
 
-float4x4 GetBezierMatrix(float t)
+float3 GetBezierMatrix(float t)
 {
-    float4x4 p0 = pathPoints[0];
-    float4x4 p1 = pathPoints[1];
-    float4x4 p2 = pathPoints[2];
-    float4x4 p3 = pathPoints[3];
+    float3 p0 = getMatrixPos(pathPoints[0]);
+    float3 p1 = getMatrixPos(pathPoints[1]);
+    float3 p2 = getMatrixPos(pathPoints[2]);
+    float3 p3 = getMatrixPos(pathPoints[3]);
 
-    float4x4 a = lerp(p0, p1, t);
-    float4x4 b = lerp(p1, p2, t);
-    float4x4 c = lerp(p2, p3, t);
+    float3 a = lerp(p0, p1, t);
+    float3 b = lerp(p1, p2, t);
+    float3 c = lerp(p2, p3, t);
     
-    float4x4 d = lerp(a, b, t);
-    float4x4 e = lerp(b, c, t);
+    float3 d = lerp(a, b, t);
+    float3 e = lerp(b, c, t);
     
-    float4x4 newMatrix = lerp(d, e, t);
+    float3 newMatrix = lerp(d, e, t);
 
     return newMatrix;
-    // float3 p0 = getMatrixPos(0);
-    // float3 p1 = getMatrixPos(1);
-    // float3 p2 = getMatrixPos(2);
-    // float3 p3 = getMatrixPos(3);
-    //
-    // float3 a = lerp(p0, p1, t);
-    // float3 b = lerp(p1, p2, t);
-    // float3 c = lerp(p2, p3, t);
-    //
-    // float3 d = lerp(a, b, t);
-    // float3 e = lerp(b, c, t);
-    //
-    // float3 newPos = lerp(d, e, t);
-    //
-    // return newPos;
 }
 
 [numthreads(64,1,1)]
@@ -58,54 +43,38 @@ void CalculateVertex (uint3 id : SV_DispatchThreadID)
     int currentVertex = id.x % roundSegments;
     int currentSegment = id.x / roundSegments;
     //gets t inside of the bezier curve
-    float t = currentSegment / (bezierSubSegments - 1);
+    float t = (float)currentSegment / (float)(bezierSubSegments - 1);
     //currentSegment = floor(currentSegment);
 
     float angle = 3.14159265f * 2.0f * (float)currentVertex / (float)roundSegments;
     float x = cos(angle);
     float y = sin(angle);
 
-    float3 vertPos = mul(GetBezierMatrix(t), float4(x, y, 0, 1));
-    //vertPos = float3(getMatrixPos(GetBezierMatrix(1)));
+    //float3 vertPos = mul(GetBezierMatrix(t), float4(x, y, 0, 1));
+    float3 vertPos = float3(x, y, 0) + GetBezierMatrix(t);
     
-    bufVertices.Store3(id.x * 12, asuint(vertPos));
+    bufVertices.Store3(id.x * 24, asuint(vertPos));
+    bufVertices.Store3(id.x * 24 + 12, asuint(float3(x, y, 0)));
 }
 
 [numthreads(32,1,1)]
 void CalculateIndex (uint3 id : SV_DispatchThreadID)
 {
-    int rootIndex = id.x;
-    int A = rootIndex;
-    int B = (rootIndex + 1) % roundSegments;
-    int Anext = rootIndex + roundSegments;
-    int Bnext = (rootIndex + 1) % roundSegments + roundSegments;
-
+    const int currentSegment = id.x / roundSegments;
+    const int nextSegment = currentSegment + 1;
+    const int rootIndex = id.x;
+    const int A = rootIndex;
+    const int B = roundSegments * currentSegment + (id.x + 1) % roundSegments;
+    const int ANext = rootIndex + roundSegments;
+    const int BNext = roundSegments * currentSegment + (id.x + 1) % roundSegments + roundSegments;
+    
     int localAddress = id.x * 6;
-        
+    
     bufIndice.Store((localAddress + 0) * 4, asuint(A));
     bufIndice.Store((localAddress + 1) * 4, asuint(B));
-    bufIndice.Store((localAddress + 2) * 4, asuint(Anext));
-        
-    bufIndice.Store((localAddress + 3) * 4, asuint(B));
-    bufIndice.Store((localAddress + 4) * 4, asuint(Bnext));
-    bufIndice.Store((localAddress + 5) * 4, asuint(Anext));
+    bufIndice.Store((localAddress + 2) * 4, asuint(ANext));
     
-    // for (int i = 0; i < roundSegments; i++)
-    // {
-    //     int rootIndex = i;
-    //     int A = rootIndex;
-    //     int B = (rootIndex + 1) % roundSegments;
-    //     int Anext = rootIndex + roundSegments;
-    //     int Bnext = (rootIndex + 1) % roundSegments + roundSegments;
-    //
-    //     int localAddress = i * 6;
-    //     
-    //     bufIndice.Store((localAddress + 0) * 4, asuint(A));
-    //     bufIndice.Store((localAddress + 1) * 4, asuint(B));
-    //     bufIndice.Store((localAddress + 2) * 4, asuint(Anext));
-    //     
-    //     bufIndice.Store((localAddress + 3) * 4, asuint(B));
-    //     bufIndice.Store((localAddress + 4) * 4, asuint(Bnext));
-    //     bufIndice.Store((localAddress + 5) * 4, asuint(Anext));
-    // }
+    bufIndice.Store((localAddress + 3) * 4, asuint(B));
+    bufIndice.Store((localAddress + 4) * 4, asuint(BNext));
+    bufIndice.Store((localAddress + 5) * 4, asuint(ANext));
 }
