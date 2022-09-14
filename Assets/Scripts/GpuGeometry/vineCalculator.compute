@@ -8,37 +8,70 @@
 RWByteAddressBuffer bufVertices;
 RWByteAddressBuffer bufIndice;
 
-RWStructuredBuffer<float3> pathPoints;
-RWStructuredBuffer<float3> bufOldVertices;
+StructuredBuffer<float4x4> pathPoints;
 
 int roundSegments;
+int bezierSubSegments;
 
-[numthreads(1,1,1)]
+float3 getMatrixPos(float4x4 mat)
+{
+    return float3(mat[0].w, mat[1].w, mat[2].w);
+}
+
+float4x4 GetBezierMatrix(float t)
+{
+    float4x4 p0 = pathPoints[0];
+    float4x4 p1 = pathPoints[1];
+    float4x4 p2 = pathPoints[2];
+    float4x4 p3 = pathPoints[3];
+
+    float4x4 a = lerp(p0, p1, t);
+    float4x4 b = lerp(p1, p2, t);
+    float4x4 c = lerp(p2, p3, t);
+    
+    float4x4 d = lerp(a, b, t);
+    float4x4 e = lerp(b, c, t);
+    
+    float4x4 newMatrix = lerp(d, e, t);
+
+    return newMatrix;
+    // float3 p0 = getMatrixPos(0);
+    // float3 p1 = getMatrixPos(1);
+    // float3 p2 = getMatrixPos(2);
+    // float3 p3 = getMatrixPos(3);
+    //
+    // float3 a = lerp(p0, p1, t);
+    // float3 b = lerp(p1, p2, t);
+    // float3 c = lerp(p2, p3, t);
+    //
+    // float3 d = lerp(a, b, t);
+    // float3 e = lerp(b, c, t);
+    //
+    // float3 newPos = lerp(d, e, t);
+    //
+    // return newPos;
+}
+
+[numthreads(64,1,1)]
 void CalculateVertex (uint3 id : SV_DispatchThreadID)
 {
-    // for (int i = 0; i < roundSegments; i++)
-    // {
-    //     float float_i = i;
-    //     float float_rs = roundSegments;
-    //     float angle = 3.14159265f * 2.0f * float_i / float_rs;
-    //     float x = cos(angle);
-    //     float y = sin(angle);
-    //
-    //     bufVertices.Store3((i + roundSegments * id.x) * 12, asuint(float3(x, y, 10 * id.x)));
-    // }
-
     int currentVertex = id.x % roundSegments;
     int currentSegment = id.x / roundSegments;
-    currentSegment = floor(currentSegment);
+    //gets t inside of the bezier curve
+    float t = currentSegment / (bezierSubSegments - 1);
+    //currentSegment = floor(currentSegment);
 
     float angle = 3.14159265f * 2.0f * (float)currentVertex / (float)roundSegments;
     float x = cos(angle);
     float y = sin(angle);
-    //bufVertices.Store3((currentVertex + roundSegments * currentSegment) * 12, asuint(float3(x, y, 10 * currentSegment)));
-    bufVertices.Store3(id.x * 12, asuint(float3(x, y, 10 * currentSegment)));
+
+    float3 vertPos = mul(GetBezierMatrix(t), float4(x, y, 0, 1));
+    //vertPos = float3(getMatrixPos(GetBezierMatrix(1)));
+    
+    bufVertices.Store3(id.x * 12, asuint(vertPos));
 }
 
-[numthreads(1,1,1)]
+[numthreads(32,1,1)]
 void CalculateIndex (uint3 id : SV_DispatchThreadID)
 {
     int rootIndex = id.x;
