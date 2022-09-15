@@ -11,15 +11,18 @@ public class Vines : MonoBehaviour
 	[SerializeField] private ComputeShader computeShader;
 	[SerializeField] [Range(4, 256)]private int roundSegments = 16;
 	[SerializeField] [Range(2, 256)] private int bezierSubSegments = 3;
+	[SerializeField] [Range(1, 64)] private int bezierSegments = 3;
 	[SerializeField] private Transform[] transformArray;
 	
 	[SerializeField] private bool updateMesh = true;
 
 	private int cachedRoundSegments;
+	private int cachedBezierSubSegments;
+	private int cachedBezierSegments;
 	float localTime;
 	private Mesh newMesh;
 
-	private int TotalVerts => 2 * roundSegments + (bezierSubSegments - 2) * roundSegments;
+	private int TotalVerts => (2 * roundSegments + (bezierSubSegments - 2) * roundSegments) * bezierSegments;
 	private int TotalIndice => TotalVerts * 6 - (roundSegments * 6);
 
 	// Buffers for GPU compute shader path
@@ -30,7 +33,7 @@ public class Vines : MonoBehaviour
 	void OnEnable()
 	{
 		CreateMesh();
-		pathPoints = new ComputeBuffer(4, sizeof(float) * 16);
+		pathPoints = new ComputeBuffer(transformArray.Length, sizeof(float) * 16);
 	}
 
 	void OnDisable()
@@ -39,22 +42,47 @@ public class Vines : MonoBehaviour
 		gpuVertices = null;
 		gpuIndice?.Dispose();
 		gpuIndice = null;
+		pathPoints?.Dispose();
+		pathPoints = null;
 	}
 
 	private void OnDrawGizmos()
 	{
+		Gizmos.color = Color.green;
+		for (int i = 0; i < transformArray.Length; i +=3)
+		{
+			Gizmos.DrawSphere(transformArray[i].position, 0.5f);
+		}
+
+		Gizmos.color = Color.red;
+		for (int i = 1; i < transformArray.Length; i++)
+		{
+			if(i % 3 == 0) continue;
+			Gizmos.DrawSphere(transformArray[i].position, 0.5f);
+		}
+		
 		Handles.DrawBezier(transformArray[0].position, transformArray[3].position, 
 			transformArray[1].position, transformArray[2].position,
 			Color.green, EditorGUIUtility.whiteTexture, 1f
 			);
+		Handles.DrawBezier(transformArray[3].position, transformArray[6].position, 
+			transformArray[4].position, transformArray[5].position,
+			Color.green, EditorGUIUtility.whiteTexture, 1f
+		);
+		Handles.DrawBezier(transformArray[6].position, transformArray[9].position, 
+			transformArray[7].position, transformArray[8].position,
+			Color.green, EditorGUIUtility.whiteTexture, 1f
+		);
 	}
 
 	public void Update()
 	{
-		if (roundSegments != cachedRoundSegments)
+		if (roundSegments != cachedRoundSegments || bezierSubSegments != cachedBezierSubSegments || bezierSegments != cachedBezierSegments)
 		{
 			UpdateMesh();
 			cachedRoundSegments = roundSegments;
+			cachedBezierSubSegments = bezierSubSegments;
+			cachedBezierSegments = bezierSegments;
 		}
 		
 		if (updateMesh)
@@ -76,18 +104,20 @@ public class Vines : MonoBehaviour
 		computeShader.SetFloat("gTime", localTime);
 		computeShader.SetInt("roundSegments", roundSegments);
 		computeShader.SetInt("bezierSubSegments", bezierSubSegments);
+		computeShader.SetInt("bezierSegments", bezierSegments);
 		
 		computeShader.SetBuffer(0, "pathPoints", pathPoints);
 		computeShader.SetBuffer(0, "bufVertices", gpuVertices);
-		computeShader.SetBuffer(1, "bufIndice", gpuIndice);
 		computeShader.Dispatch(0, (TotalVerts + 64 - 1) / 64, 1, 1);
+		
+		computeShader.SetBuffer(1, "bufIndice", gpuIndice);
 		computeShader.Dispatch(1, (TotalVerts + 32 - 1) / 32, 1, 1);
-
+		
 		Vector3[] vertex = new Vector3[TotalVerts];
 		gpuVertices.GetData(vertex);
 		int[] index = new int[TotalIndice];
 		gpuIndice.GetData(index);
-		int i = 3 % 4;
+		float t = 1.0f % 1.01f;
 	}
 	
 	private void UpdateMesh()
@@ -106,6 +136,8 @@ public class Vines : MonoBehaviour
 		
 		newMesh.SetVertices(vertPos);
 		newMesh.triangles = indice;
+		
+		newMesh.bounds = new Bounds(transform.position, new Vector3(500, 500, 500));
 		
 		gpuVertices?.Dispose();
 		gpuVertices = null;
@@ -140,13 +172,15 @@ public class Vines : MonoBehaviour
 		}
 		
 		newMesh.SetVertexBufferParams(newMesh.vertexCount, 
-		                              new VertexAttributeDescriptor(VertexAttribute.Position, stream: 0), 
-		                              new VertexAttributeDescriptor(VertexAttribute.Normal, stream: 0)
+			new VertexAttributeDescriptor(VertexAttribute.Position, stream: 0), 
+						new VertexAttributeDescriptor(VertexAttribute.Normal, stream: 1)
 			);
 		
 		newMesh.SetVertices(vertPos);
 		newMesh.triangles = indice;
 		newMesh.name = "vines";
+		newMesh.bounds = new Bounds(transform.position, new Vector3(500, 500, 500));
+
 		GetComponent<MeshFilter>().mesh = newMesh;
 	}
 

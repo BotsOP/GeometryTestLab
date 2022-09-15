@@ -12,18 +12,20 @@ StructuredBuffer<float4x4> pathPoints;
 
 int roundSegments;
 int bezierSubSegments;
+int bezierSegments;
 
 float3 getMatrixPos(float4x4 mat)
 {
     return float3(mat[0].w, mat[1].w, mat[2].w);
 }
 
-float3 GetBezierMatrix(float t)
+float3 GetBezierMatrix(float t, int currentBezierSegment)
 {
-    float3 p0 = getMatrixPos(pathPoints[0]);
-    float3 p1 = getMatrixPos(pathPoints[1]);
-    float3 p2 = getMatrixPos(pathPoints[2]);
-    float3 p3 = getMatrixPos(pathPoints[3]);
+    int rootBezierIndex = 3 * currentBezierSegment;
+    float3 p0 = getMatrixPos(pathPoints[rootBezierIndex + 0]);
+    float3 p1 = getMatrixPos(pathPoints[rootBezierIndex + 1]);
+    float3 p2 = getMatrixPos(pathPoints[rootBezierIndex + 2]);
+    float3 p3 = getMatrixPos(pathPoints[rootBezierIndex + 3]);
 
     float3 a = lerp(p0, p1, t);
     float3 b = lerp(p1, p2, t);
@@ -42,19 +44,21 @@ void CalculateVertex (uint3 id : SV_DispatchThreadID)
 {
     int currentVertex = id.x % roundSegments;
     int currentSegment = id.x / roundSegments;
-    //gets t inside of the bezier curve
-    float t = (float)currentSegment / (float)(bezierSubSegments - 1);
-    //currentSegment = floor(currentSegment);
+    int currentBezierSegment = id.x / (roundSegments * bezierSubSegments);
+    
+    float t = (float)(currentSegment) / (float)(bezierSubSegments - 1);
+    t = t - 1 * currentBezierSegment;
 
     float angle = 3.14159265f * 2.0f * (float)currentVertex / (float)roundSegments;
     float x = cos(angle);
     float y = sin(angle);
-
-    //float3 vertPos = mul(GetBezierMatrix(t), float4(x, y, 0, 1));
-    float3 vertPos = float3(x, y, 0) + GetBezierMatrix(t);
     
-    bufVertices.Store3(id.x * 24, asuint(vertPos));
-    bufVertices.Store3(id.x * 24 + 12, asuint(float3(x, y, 0)));
+    float3 normal = float3(x, y, 0);
+    //float3 vertPos = mul(GetBezierMatrix(t), float4(x, y, 0, 1));
+    float3 vertPos = normal + GetBezierMatrix(t, currentBezierSegment);
+    
+    bufVertices.Store3(id.x * 12, asuint(float3(GetBezierMatrix(t, currentBezierSegment).x, t, currentBezierSegment)));
+    //bufVertices.Store3(id.x * 24 + 12, asuint(float3(9999,9999,9999)));
 }
 
 [numthreads(32,1,1)]
